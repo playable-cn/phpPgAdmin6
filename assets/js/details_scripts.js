@@ -1,6 +1,3 @@
- {% include 'details_components/footer_scripts.twig' %}
-
-<script type="text/javascript" inPopUp="{{inPopUp}}" windowname="{{windowname}}">
 if (!window.inPopUp) {
 
 
@@ -105,7 +102,3 @@ if (!window.inPopUp) {
 
 	});
 }
-</script>
-</body>
-
-</html>

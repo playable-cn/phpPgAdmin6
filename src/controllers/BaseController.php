@@ -364,8 +364,7 @@ class BaseController
     public function printFooter($doBody = true, $template = 'footer.twig', $viewParams = [])
     {
         $footer_controller = $this->_getFooterController();
-
-        $footer_html = $footer_controller->getFooter($template, $viewParams);
+        $footer_html       = $footer_controller->getFooter($template, $viewParams);
         if ($doBody) {
             echo $footer_html;
         } else {

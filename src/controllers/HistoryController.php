@@ -58,7 +58,26 @@ class HistoryController extends BaseController
         // Set the name of the window
         $this->setWindowName('history');
 
-        return $this->printFooter(true, 'footer_sqledit.twig', true);
+        return $this->printFooter(true, 'footer_sqledit.twig', ['inPopUp' => true, 'windowname' => 'sqledit']);
+    }
+
+    private function _getSessionHistory($server, $database)
+    {
+        if (!array_key_exists('history', $_SESSION)) {
+            return null;
+        }
+        $session_history = $_SESSION['history'];
+
+        if (!array_key_exists($server, $session_history)) {
+            return null;
+        }
+        $server_history = $session_history[$server];
+
+        if (!array_key_exists($database, $server_history)) {
+            return null;
+        }
+        return $server_history[$database];
+
     }
 
     public function doDefault()
@@ -74,14 +93,17 @@ class HistoryController extends BaseController
         $this->printConnection('history');
         echo '</form><br />';
 
-        if (!isset($_REQUEST['database'])) {
+        if (
+            !$request_server = $this->getRequestParam('server', null) &&
+            !$request_database = $this->getRequestParam('database', null)
+        ) {
             echo "<p>{$this->lang['strnodatabaseselected']}</p>" . PHP_EOL;
-
             return;
         }
+        $sessionHistory = $this->_getSessionHistory($request_server, $request_database);
+        if (!is_null($sessionHistory)) {
 
-        if (isset($_SESSION['history'][$_REQUEST['server']][$_REQUEST['database']])) {
-            $history = new \PHPPgAdmin\ArrayRecordSet($_SESSION['history'][$_REQUEST['server']][$_REQUEST['database']]);
+            $history = new \PHPPgAdmin\ArrayRecordSet($sessionHistory);
 
             //Kint::dump($history);
             $columns = [
@@ -129,7 +151,13 @@ class HistoryController extends BaseController
                 ],
             ];
 
-            echo $this->printTable($history, $columns, $actions, 'history-history', $this->lang['strnohistory']);
+            echo $this->printTable(
+                $history,
+                $columns,
+                $actions,
+                'history-history',
+                $this->lang['strnohistory']
+            );
         } else {
             echo "<p>{$this->lang['strnohistory']}</p>" . PHP_EOL;
         }
@@ -141,8 +169,8 @@ class HistoryController extends BaseController
                         'url'     => 'history',
                         'urlvars' => [
                             'action'   => 'history',
-                            'server'   => $_REQUEST['server'],
-                            'database' => $_REQUEST['database'],
+                            'server'   => $request_server,
+                            'database' => $request_database,
                         ],
                     ],
                 ],
@@ -150,16 +178,16 @@ class HistoryController extends BaseController
             ],
         ];
 
-        if (isset($_SESSION['history'][$_REQUEST['server']][$_REQUEST['database']])
-            && count($_SESSION['history'][$_REQUEST['server']][$_REQUEST['database']])) {
+        if (!is_null($sessionHistory)
+            && count($sessionHistory)) {
             $navlinks['download'] = [
                 'attr'    => [
                     'href' => [
                         'url'     => 'history',
                         'urlvars' => [
                             'action'   => 'download',
-                            'server'   => $_REQUEST['server'],
-                            'database' => $_REQUEST['database'],
+                            'server'   => $request_server,
+                            'database' => $request_database,
                         ],
                     ],
                 ],
@@ -171,8 +199,8 @@ class HistoryController extends BaseController
                         'url'     => 'history',
                         'urlvars' => [
                             'action'   => 'confclearhistory',
-                            'server'   => $_REQUEST['server'],
-                            'database' => $_REQUEST['database'],
+                            'server'   => $request_server,
+                            'database' => $request_database,
                         ],
                     ],
                 ],
@@ -194,7 +222,7 @@ class HistoryController extends BaseController
             echo "<h3>{$this->lang['strdelhistory']}</h3>" . PHP_EOL;
             echo "<p>{$this->lang['strconfdelhistory']}</p>" . PHP_EOL;
 
-            echo '<pre>', htmlentities($_SESSION['history'][$_REQUEST['server']][$_REQUEST['database']][$qid]['query'], ENT_QUOTES, 'UTF-8'), '</pre>';
+            echo '<pre>', htmlentities($_SESSION['history'][$this->getRequestParam('server', null)][$this->getRequestParam('database', null)][$qid]['query'], ENT_QUOTES, 'UTF-8'), '</pre>';
             echo '<form action="' . \SUBFOLDER . '/src/views/history" method="post">' . PHP_EOL;
             echo '<input type="hidden" name="action" value="delhistory" />' . PHP_EOL;
             echo "<input type=\"hidden\" name=\"queryid\" value=\"${qid}\" />" . PHP_EOL;
@@ -203,7 +231,7 @@ class HistoryController extends BaseController
             echo "<input type=\"submit\" name=\"no\" value=\"{$this->lang['strno']}\" />" . PHP_EOL;
             echo '</form>' . PHP_EOL;
         } else {
-            unset($_SESSION['history'][$_REQUEST['server']][$_REQUEST['database']][$qid]);
+            unset($_SESSION['history'][$this->getRequestParam('server', null)][$this->getRequestParam('database', null)][$qid]);
         }
     }
 
@@ -225,7 +253,7 @@ class HistoryController extends BaseController
             echo "<input type=\"submit\" name=\"no\" value=\"{$this->lang['strno']}\" />" . PHP_EOL;
             echo '</form>' . PHP_EOL;
         } else {
-            unset($_SESSION['history'][$_REQUEST['server']][$_REQUEST['database']]);
+            unset($_SESSION['history'][$this->getRequestParam('server', null)][$this->getRequestParam('database', null)]);
         }
     }
 
@@ -235,7 +263,7 @@ class HistoryController extends BaseController
         $datetime = date('YmdHis');
         header("Content-Disposition: attachment; filename=history{$datetime}.sql");
 
-        foreach ($_SESSION['history'][$_REQUEST['server']][$_REQUEST['database']] as $queries) {
+        foreach ($_SESSION['history'][$this->getRequestParam('server', null)][$this->getRequestParam('database', null)] as $queries) {
             $query = rtrim($queries['query']);
             echo $query;
             if (';' != substr($query, -1)) {

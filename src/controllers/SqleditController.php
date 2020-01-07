@@ -41,11 +41,16 @@ class SqleditController extends BaseController
 
         $this->scripts = '<script type="text/javascript">window.inPopUp=true;</script>';
 
-        $this->printHeader($title, $this->scripts, true, 'header_sqledit.twig');
-        $this->printBody(true, 'sql_edit');
-        echo $body_text;
-        $this->container->get('view')->offsetSet('inPopUp', true);
-        $this->printFooter(true, 'footer_sqledit.twig', true);
+        $body = $this->container->responseobj->getBody();
+        $body->write($this->printHeader($title, $this->scripts, false, 'header_sqledit.twig'));
+        $body->write($this->printBody(false, 'sql_edit'));
+
+        $body->write($body_text);
+
+        $body->write($this->printFooter(false, 'footer_sqledit.twig', [
+            'inPopUp' => true, 'windowname' => 'sqledit',
+        ]));
+        return $this->container->responseobj;
     }
 
     /**
