@@ -1,10 +1,9 @@
 
 {% include 'components/prefetch_styles.twig' %}
 
-<script type="text/javascript">
-
-window.$ = window.jQuery = window.parent.$;
-</script>		
+<link href="{{subfolder}}/assets/vendor/jquery/jquery-ui.min.css" type="text/css" rel="stylesheet" />
+<script src="{{subfolder}}/assets/vendor/jquery/jquery-3.4.1.min.js"></script>
+<script src="{{subfolder}}/assets/vendor/jquery/jquery-ui.min.js"></script>
 
 
 {{script|raw}}

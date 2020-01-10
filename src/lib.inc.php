@@ -52,28 +52,6 @@ if (!ini_get('session.auto_start')) {
     session_start();
 }
 
-// Dumb Polyfill to avoid errors with Kint
-if (
-    class_exists('Kint')) {
-    \Kint::$enabled_mode                = DEBUGMODE;
-    Kint\Renderer\RichRenderer::$folder = false;
-} else {
-    class Kint
-    {
-        public static $enabled_mode = false;
-        public static $aliases      = [];
-
-        public static function dump() {}
-    }
-}
-
-\Kint::$enabled_mode = DEBUGMODE;
-function ddd(...$v)
-{
-    \Kint::dump(...$v);
-    exit;
-}
-
 \Kint::$aliases[] = 'ddd';
 // Polyfill for PHPConsole
 if (isset($conf['php_console']) &&
@@ -96,6 +74,27 @@ ini_set('display_startup_errors', intval(DEBUGMODE));
 if (DEBUGMODE) {
     ini_set('opcache.revalidate_freq', 0);
     error_reporting(E_ALL);
+}
+// Dumb Polyfill to avoid errors with Kint
+if (
+    class_exists('\Kint')) {
+    \Kint::$enabled_mode                 = DEBUGMODE;
+    \Kint\Renderer\RichRenderer::$folder = false;
+} else {
+    class Kint
+    {
+        public static $enabled_mode = false;
+        public static $aliases      = [];
+
+        public static function dump() {}
+    }
+}
+
+\Kint::$enabled_mode = DEBUGMODE;
+function ddd(...$v)
+{
+    \Kint::dump(...$v);
+    exit;
 }
 
 // Fetch App and DI Container

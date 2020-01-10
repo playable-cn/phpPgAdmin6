@@ -93,22 +93,21 @@ class BaseController
             $this->misc->setNoDBConnection(true);
         }
 
-        if (false === $this->misc->getNoDBConnection()) {
-            if (null === $this->misc->getServerId()) {
-                $servers_controller = new \PHPPgAdmin\Controller\ServersController($container);
-
-                return $servers_controller->render();
-            }
-            $_server_info = $this->misc->getServerInfo();
-            // Redirect to the login form if not logged in
-            if (!isset($_server_info['username'])) {
-                $msg = sprintf($this->lang['strlogoutmsg'], $_server_info['desc']);
-
-                $servers_controller = new \PHPPgAdmin\Controller\ServersController($container);
-
-                return $servers_controller->render();
-            }
+        if (true === $this->misc->getNoDBConnection()) {
+            return;
         }
+        if (null === $this->misc->getServerId()) {
+            $servers_controller = new ServersController($container);
+            return $servers_controller->render();
+        }
+        $_server_info = $this->misc->getServerInfo();
+        // Redirect to the login form if not logged in
+        if (!isset($_server_info['username'])) {
+            $msg                = sprintf($this->lang['strlogoutmsg'], $_server_info['desc']);
+            $servers_controller = new ServersController($container);
+            return $servers_controller->render();
+        }
+
     }
 
     /**

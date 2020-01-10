@@ -124,14 +124,16 @@ class TablesController extends BaseController
                 break;
         }
 
-        $output = ob_get_clean();
+        $body = $this->container->responseobj->getBody();
+        $body->write($this->printHeader($this->headerTitle(), null, false, $header_template));
+        $body->write($this->printBody(false));
+        $body_text = ob_get_clean();
+        $body->write($body_text);
 
-        $this->printHeader($this->headerTitle(), null, true, $header_template);
-        $this->printBody();
+        $body->write($this->printFooter(false));
 
-        echo $output;
+        return $this->container->responseobj;
 
-        return $this->printFooter();
     }
 
     private function _getColumns()
@@ -319,8 +321,7 @@ class TablesController extends BaseController
 
         $actions = $this->_getActions();
 
-        //\Kint::dump($tables);
-
+        //ddd($tables);
         $navlinks = [
             'create' => [
                 'attr'    => [
@@ -361,8 +362,9 @@ class TablesController extends BaseController
             $this->table_place,
             $this->lang['strnotables']
         );
-
         $navLinks = $this->printNavLinks($navlinks, 'tables-tables', get_defined_vars(), false);
+        echo $tablesContent;
+        echo $navLinks;
     }
 
     public function displayJson()
