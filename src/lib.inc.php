@@ -42,8 +42,11 @@ if (!defined('ADODB_ERROR_HANDLER')) {
 if (!is_writable(session_save_path())) {
     echo 'Session path "' . session_save_path() . '" is not writable for PHP!';
 }
-// Start session (if not auto-started)
-if (!ini_get('session.auto_start')) {
+$setSession = (
+    defined('PHP_SESSION_ACTIVE') ? session_status() != PHP_SESSION_ACTIVE : !session_id()) &&
+!headers_sent() &&
+!ini_get('session.auto_start');
+if ($setSession) {
     session_name('PPA_ID');
 
     $use_ssl = isset($_SERVER['HTTPS']) &&
