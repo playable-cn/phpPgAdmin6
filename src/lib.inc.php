@@ -144,10 +144,6 @@ $container->offsetSet('server', isset($_REQUEST['server']) ? $_REQUEST['server']
 $container->offsetSet('database', isset($_REQUEST['database']) ? $_REQUEST['database'] : null);
 $container->offsetSet('schema', isset($_REQUEST['schema']) ? $_REQUEST['schema'] : null);
 
-$container['flash'] = function () {
-    return new \Slim\Flash\Messages();
-};
-
 // Complete missing conf keys
 $container['conf'] = function ($c) use ($conf) {
 

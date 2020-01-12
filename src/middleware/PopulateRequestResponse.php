@@ -65,13 +65,6 @@ class PopulateRequestResponse extends Middleware
             return ($container->haltHandler)($container->requestobj, $container->responseobj, $container['errors'], 412);
         }
 
-        $messages = $container->flash->getMessages();
-        if (!empty($messages)) {
-            foreach ($messages as $key => $message) {
-                \PC::debug($message, 'Flash: ' . $key);
-            }
-        }
-
         // First execute anything else
         $response = $next($request, $response);
 

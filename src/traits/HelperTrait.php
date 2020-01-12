@@ -56,7 +56,6 @@ trait HelperTrait
             $key = implode('', $btarray0);
         }
 
-        $this->container->flash->addMessage($key, $content);
     }
 
     /**
@@ -233,6 +232,6 @@ trait HelperTrait
         $line   = $backtrace[0]['line'];
 
         call_user_func_array('\Kint::dump', func_get_args());
-        $this->halt('stopped by user at '.$file.' line '.$line);
+        $this->halt('stopped by user at ' . $file . ' line ' . $line);
     }
 }
