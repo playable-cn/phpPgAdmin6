@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC2
+ * PHPPgAdmin v6.0.0-RC1.
  */
 
 namespace PHPPgAdmin\Traits;
@@ -13,8 +13,6 @@ namespace PHPPgAdmin\Traits;
 
 /**
  * A trait with helpers methods to debug, halt the app and format text to html.
- *
- * @package PHPPgAdmin
  */
 trait HelperTrait
 {
@@ -55,7 +53,8 @@ trait HelperTrait
 
             $key = implode('', $btarray0);
         }
-
+        dump(__METHOD__ . ': addMessage ' . $key . '  ' . json_encode($content));
+        $this->container->flash->addMessage($key, $content);
     }
 
     /**
@@ -91,7 +90,7 @@ trait HelperTrait
 
         $tag = implode('', $btarray0);
 
-        \PC::debug(func_get_args(), $tag);
+        dump(func_get_args(), $tag);
     }
 
     /**

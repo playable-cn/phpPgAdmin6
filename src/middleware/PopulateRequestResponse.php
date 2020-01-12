@@ -4,7 +4,7 @@ namespace PHPPgAdmin\Middleware;
 
 /**
  * Set the requestobj and responseobj properties of the container
- * as the value of $request and $response, which already contain the route
+ * as the value of $request and $response, which already contain the route.
  */
 class PopulateRequestResponse extends Middleware
 {
@@ -15,7 +15,6 @@ class PopulateRequestResponse extends Middleware
         \Psr\Http\Message\ResponseInterface $response,
         $next
     ) {
-
         $container                = $this->container;
         $container['requestobj']  = $request;
         $container['responseobj'] = $response;
@@ -63,6 +62,13 @@ class PopulateRequestResponse extends Middleware
 
         if (count($container['errors']) > 0) {
             return ($container->haltHandler)($container->requestobj, $container->responseobj, $container['errors'], 412);
+        }
+
+        $messages = $container->flash->getMessages();
+        if (!empty($messages)) {
+            foreach ($messages as $key => $message) {
+                \PC::debug('Flash: ' . $key . ' =  ' . json_encode($message));
+            }
         }
 
         // First execute anything else

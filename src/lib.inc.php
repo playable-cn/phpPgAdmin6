@@ -1,11 +1,10 @@
 <?php
 
 /**
- * Function library read in upon startup
+ * Function library read in upon startup.
  *
  * Release: lib.inc.php,v 1.123 2008/04/06 01:10:35 xzilla Exp $
  */
-
 defined('BASE_PATH') or define('BASE_PATH', dirname(__DIR__));
 
 define('THEME_PATH', BASE_PATH . '/assets/themes');
@@ -19,6 +18,16 @@ require_once BASE_PATH . '/vendor/autoload.php';
 
 // base value for PHPConsole handler to avoid undefined variable
 $phpConsoleHandler = null;
+$setSession        = (defined('PHP_SESSION_ACTIVE') ? session_status() != PHP_SESSION_ACTIVE : !session_id()) && !headers_sent() && !ini_get('session.auto_start');
+$use_ssl           = isset($_SERVER['HTTPS']);
+
+session_set_cookie_params(0, '/', null, $use_ssl);
+if (!ini_get('session.auto_start')) {
+    session_name('PPA_ID');
+
+    session_start();
+}
+
 // Check to see if the configuration file exists, if not, explain
 if (file_exists(BASE_PATH . '/config.inc.php')) {
     $conf = [];
@@ -40,48 +49,33 @@ if (!defined('ADODB_ERROR_HANDLER_TYPE')) {
 if (!defined('ADODB_ERROR_HANDLER')) {
     define('ADODB_ERROR_HANDLER', '\PHPPgAdmin\ADOdbException::adodb_throw');
 }
-
-$setSession = (defined('PHP_SESSION_ACTIVE') ? session_status() != PHP_SESSION_ACTIVE : !session_id()) && !headers_sent() && !ini_get('session.auto_start');
-if ($setSession) {
-    session_name('PPA_ID');
-
-    $use_ssl = isset($_SERVER['HTTPS']) &&
-    isset($conf['HTTPS_COOKIE']) &&
-    boolval($conf['HTTPS_COOKIE']) !== false;
-    session_set_cookie_params(0, '/', null, $use_ssl);
-
-    session_start();
+if (!is_writable(session_save_path())) {
+    echo 'Session path "' . session_save_path() . '" is not writable for PHP!';
 }
 
-// Global functions and polyfills
-function maybeRenderIframes($c, $response, $subject, $query_string)
+class PC
 {
-    $in_test = $c->view->offsetGet('in_test');
+    public static function debug() {}
 
-    if ($in_test === '1') {
-        $className  = '\PHPPgAdmin\Controller\\' . ucfirst($subject) . 'Controller';
-        $controller = new $className($c);
-        return $controller->render();
-    }
+}
 
-    $viewVars = [
-        'url'            => '/src/views/' . $subject . ($query_string ? '?' . $query_string : ''),
-        'headertemplate' => 'header.twig',
-    ];
-
-    return $c->view->render($response, 'iframe_view.twig', $viewVars);
-};
+ini_set('display_errors', intval(DEBUGMODE));
+ini_set('display_startup_errors', intval(DEBUGMODE));
+if (DEBUGMODE) {
+    ini_set('opcache.revalidate_freq', 0);
+    error_reporting(E_ALL);
+}
 // Dumb Polyfill to avoid errors with Kint
 if (
-    class_exists('Kint')) {
-    \Kint::$enabled_mode                = DEBUGMODE;
-    Kint\Renderer\RichRenderer::$folder = false;
-
+    class_exists('\Kint')) {
+    \Kint::$enabled_mode                 = DEBUGMODE;
+    \Kint\Renderer\RichRenderer::$folder = false;
 } else {
     class Kint
     {
-        static $enabled_mode = false;
-        static $aliases      = [];
+        public static $enabled_mode = false;
+        public static $aliases      = [];
+
         public static function dump() {}
     }
 }
@@ -93,35 +87,10 @@ function ddd(...$v)
     exit;
 }
 
-\Kint::$aliases[] = 'ddd';
-// Polyfill for PHPConsole
-if (isset($conf['php_console']) &&
-    class_exists('PhpConsole\Helper') &&
-    $conf['php_console'] === true) {
-    \PhpConsole\Helper::register(); // it will register global PC class
-    if (!is_null($phpConsoleHandler)) {
-        $phpConsoleHandler->start(); // initialize phpConsoleHandler*/
-    }
-
-} else {
-    class PC
-    {
-        public static function debug() {}
-    }
-}
-
-ini_set('display_errors', intval(DEBUGMODE));
-ini_set('display_startup_errors', intval(DEBUGMODE));
-if (DEBUGMODE) {
-    ini_set('opcache.revalidate_freq', 0);
-    error_reporting(E_ALL);
-}
-
 // Fetch App and DI Container
 list($container, $app) = \PHPPgAdmin\ContainerUtils::createContainer();
 
 if ($container instanceof \Psr\Container\ContainerInterface) {
-
     if (PHP_SAPI == 'cli-server') {
         $subfolder = '/index.php';
     } elseif (isset($conf['subfolder']) && is_string($conf['subfolder'])) {
@@ -164,6 +133,7 @@ $container['conf'] = function ($c) use ($conf) {
             $server['sslmode'] = 'unspecified';
         }
     }
+
     return $conf;
 };
 
@@ -175,6 +145,7 @@ $container['lang'] = function ($c) {
 
 $container['plugin_manager'] = function ($c) {
     $plugin_manager = new \PHPPgAdmin\PluginManager($c);
+
     return $plugin_manager;
 };
 
@@ -199,6 +170,7 @@ $container['misc'] = function ($c) {
         $_SESSION['ppaTheme'] = $_theme;
         $misc->setConf('theme', $_theme);
     }
+
     return $misc;
 };
 
@@ -231,6 +203,7 @@ $container['view'] = function ($c) {
     $view->offsetSet('appName', $c->get('settings')['appName']);
 
     $misc->setView($view);
+
     return $view;
 };
 
