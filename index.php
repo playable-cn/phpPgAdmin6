@@ -70,8 +70,7 @@ $app->post('/redirect/server', function (
 
 // If login action is set, then set session variables
     if ((bool) $loginServer && (bool) $loginUsername && $loginPassword !== null) {
-        $_server_info = $this->misc->getServerInfo($loginServer);
-
+        $_server_info             = $this->misc->getServerInfo($loginServer);
         $_server_info['username'] = $loginUsername;
         $_server_info['password'] = $loginPassword;
 
@@ -85,28 +84,30 @@ $app->post('/redirect/server', function (
 
             return $response;
         }
+
         // Check for shared credentials
         if ($loginShared !== null) {
             $_SESSION['sharedUsername'] = $loginUsername;
             $_SESSION['sharedPassword'] = $loginPassword;
         }
+        dump($_SESSION);
+        dump($_server_info);
+        $misc->setReloadBrowser(false);
+        //
+        $destinationurl = $this->utils->getDestinationWithLastTab('alldb');
 
-        //$misc->setReloadBrowser(false);
-        //
-        //$destinationurl = $this->utils->getDestinationWithLastTab('alldb');
-        //
-        $AllDbController = new \PHPPgAdmin\Controller\AlldbController($this, true);
+        /*$AllDbController = new \PHPPgAdmin\Controller\AlldbController($this, true);
         ob_start();
         $AllDbController->render();
-        $dbControllerBody = ob_get_clean();
+        /*$dbControllerBody = ob_get_clean();
 
         $body->write($dbControllerBody);
+        return $response;*/
 
-        return $response;
-        //return $response->withStatus(302)->withHeader('Location', $destinationurl);
+        return $response->withStatus(302)->withHeader('Location', $destinationurl);
+
     }
     $_server_info = $this->misc->getServerInfo();
-
     if (!isset($_server_info['username'])) {
         $destinationurl = $this->utils->getDestinationWithLastTab('server');
 
@@ -122,7 +123,7 @@ $app->get('/redirect[/{subject}]', function (
     /* @scrutinizer ignore-unused */
     $args
 ) {
-    //ddd($_SESSION);
+    dump($_SESSION);
     $subject        = (isset($args['subject'])) ? $args['subject'] : 'root';
     $destinationurl = $this->utils->getDestinationWithLastTab($subject);
 
@@ -141,6 +142,7 @@ $app->map(['GET', 'POST'], '/src/views/{subject}', function (
     if ($subject === 'server') {
         $subject = 'servers';
     }
+    dump($subject, $_SESSION);
     //$this->utils->dump($request->getParams());
     $_server_info = $this->misc->getServerInfo();
 
@@ -172,6 +174,8 @@ $app->get('/{subject:\w+}', function (
 ) {
     $subject      = (isset($args['subject'])) ? $args['subject'] : 'intro';
     $_server_info = $this->misc->getServerInfo();
+    //dd($_server_info);
+
     $query_string = $request->getUri()->getQuery();
     $server_id    = $request->getQueryParam('server');
 

@@ -39,7 +39,9 @@ if (!defined('ADODB_ERROR_HANDLER_TYPE')) {
 if (!defined('ADODB_ERROR_HANDLER')) {
     define('ADODB_ERROR_HANDLER', '\PHPPgAdmin\ADOdbException::adodb_throw');
 }
-
+if (!is_writable(session_save_path())) {
+    echo 'Session path "' . session_save_path() . '" is not writable for PHP!';
+}
 // Start session (if not auto-started)
 if (!ini_get('session.auto_start')) {
     session_name('PPA_ID');
@@ -67,7 +69,7 @@ if (isset($conf['php_console']) &&
 
     }
 }
-\PC::debug($phpConsoleHandler);
+//dd($phpConsoleHandler);
 
 ini_set('display_errors', intval(DEBUGMODE));
 ini_set('display_startup_errors', intval(DEBUGMODE));

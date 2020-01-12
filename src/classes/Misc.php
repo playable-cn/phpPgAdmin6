@@ -495,11 +495,15 @@ class Misc
         if ($server_id === null) {
             $server_id = $this->container->requestobj->getParam('server');
         }
-
+        if (!isset($_SESSION['webdbLogin'])) {
+            $_SESSION['webdbLogin'] = [];
+        }
+        $webdbLogin = $_SESSION['webdbLogin'];
         if ($key === null) {
             if ($value === null) {
                 unset($_SESSION['webdbLogin'][$server_id]);
             } else {
+                dump($value, $webdbLogin);
                 $_SESSION['webdbLogin'][$server_id] = $value;
             }
         } else {
