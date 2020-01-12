@@ -42,7 +42,9 @@ if (!defined('ADODB_ERROR_HANDLER')) {
 }
 
 // Start session (if not auto-started)
-if (!ini_get('session.auto_start')) {
+if (!ini_get('session.auto_start') &&
+    (!defined('PHP_SESSION_ACTIVE') || session_status() != PHP_SESSION_ACTIVE || !session_id())
+) {
     session_name('PPA_ID');
 
     $use_ssl = isset($_SERVER['HTTPS']) &&
@@ -116,7 +118,6 @@ if (DEBUGMODE) {
     ini_set('opcache.revalidate_freq', 0);
     error_reporting(E_ALL);
 }
-
 // Fetch App and DI Container
 list($container, $app) = \PHPPgAdmin\ContainerUtils::createContainer();
 
