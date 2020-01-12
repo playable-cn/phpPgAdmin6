@@ -41,16 +41,14 @@ if (!defined('ADODB_ERROR_HANDLER')) {
     define('ADODB_ERROR_HANDLER', '\PHPPgAdmin\ADOdbException::adodb_throw');
 }
 
-// Start session (if not auto-started)
-if (!ini_get('session.auto_start') &&
-    (!defined('PHP_SESSION_ACTIVE') || session_status() != PHP_SESSION_ACTIVE || !session_id())
-) {
+$setSession = (defined('PHP_SESSION_ACTIVE') ? session_status() != PHP_SESSION_ACTIVE : !session_id()) && !headers_sent() && !ini_get('session.auto_start');
+if ($setSession) {
     session_name('PPA_ID');
 
     $use_ssl = isset($_SERVER['HTTPS']) &&
     isset($conf['HTTPS_COOKIE']) &&
     boolval($conf['HTTPS_COOKIE']) !== false;
-    session_set_cookie_params(0, null, null, $use_ssl, true);
+    session_set_cookie_params(0, '/', null, $use_ssl);
 
     session_start();
 }
@@ -118,6 +116,7 @@ if (DEBUGMODE) {
     ini_set('opcache.revalidate_freq', 0);
     error_reporting(E_ALL);
 }
+
 // Fetch App and DI Container
 list($container, $app) = \PHPPgAdmin\ContainerUtils::createContainer();
 
@@ -143,6 +142,10 @@ $container['responseobj'] = $container['response'];
 $container->offsetSet('server', isset($_REQUEST['server']) ? $_REQUEST['server'] : null);
 $container->offsetSet('database', isset($_REQUEST['database']) ? $_REQUEST['database'] : null);
 $container->offsetSet('schema', isset($_REQUEST['schema']) ? $_REQUEST['schema'] : null);
+
+$container['flash'] = function () {
+    return new \Slim\Flash\Messages();
+};
 
 // Complete missing conf keys
 $container['conf'] = function ($c) use ($conf) {
