@@ -3,7 +3,7 @@
 /**
  * PHPPgAdmin v6.0.0-RC2
  */
-require_once __DIR__ . '/src/lib.inc.php';
+require_once __DIR__.'/src/lib.inc.php';
 
 // This section is made to be able to parse requests coming from PHP Builtin webserver
 if (PHP_SAPI === 'cli-server') {
@@ -15,12 +15,12 @@ if (PHP_SAPI === 'cli-server') {
         $req_uri       = substr($req_uri, 10);
     }
     $filePath     = realpath(ltrim($req_uri, '/'));
-    $new_location = 'Location: http://' . $_SERVER['HTTP_HOST'] . $req_uri;
+    $new_location = 'Location: http://'.$_SERVER['HTTP_HOST'].$req_uri;
 
     if ($filePath && // 1. check that filepath is set
         is_readable($filePath) && // 2. and references a readable file/folder
-        strpos($filePath, BASE_PATH . DIRECTORY_SEPARATOR) === 0 && // 3. And is inside this folder
-        $filePath != BASE_PATH . DIRECTORY_SEPARATOR . 'index.php' && // 4. discard circular references to index.php
+        strpos($filePath, BASE_PATH.DIRECTORY_SEPARATOR) === 0 && // 3. And is inside this folder
+        $filePath != BASE_PATH.DIRECTORY_SEPARATOR.'index.php' && // 4. discard circular references to index.php
         substr(basename($filePath), 0, 1) != '.' // 5. don't serve dotfiles
     ) {
         if (strtolower(substr($filePath, -4)) == '.php') {
@@ -66,11 +66,12 @@ $app->post('/redirect/server', function (
     $loginShared   = $request->getParsedBodyParam('loginShared');
     $loginServer   = $request->getParsedBodyParam('loginServer');
     $loginUsername = $request->getParsedBodyParam('loginUsername');
-    $loginPassword = $request->getParsedBodyParam('loginPassword_' . md5($loginServer));
+    $loginPassword = $request->getParsedBodyParam('loginPassword_'.md5($loginServer));
 
-// If login action is set, then set session variables
+    // If login action is set, then set session variables
     if ((bool) $loginServer && (bool) $loginUsername && $loginPassword !== null) {
-        $_server_info             = $this->misc->getServerInfo($loginServer);
+        $_server_info = $this->misc->getServerInfo($loginServer);
+
         $_server_info['username'] = $loginUsername;
         $_server_info['password'] = $loginPassword;
 
@@ -84,30 +85,20 @@ $app->post('/redirect/server', function (
 
             return $response;
         }
-
         // Check for shared credentials
         if ($loginShared !== null) {
             $_SESSION['sharedUsername'] = $loginUsername;
             $_SESSION['sharedPassword'] = $loginPassword;
         }
-        dump($_SESSION);
-        dump($_server_info);
-        $misc->setReloadBrowser(false);
-        //
+
+        $misc->setReloadBrowser(true);
+
         $destinationurl = $this->utils->getDestinationWithLastTab('alldb');
 
-        /*$AllDbController = new \PHPPgAdmin\Controller\AlldbController($this, true);
-        ob_start();
-        $AllDbController->render();
-        /*$dbControllerBody = ob_get_clean();
-
-        $body->write($dbControllerBody);
-        return $response;*/
-
         return $response->withStatus(302)->withHeader('Location', $destinationurl);
-
     }
     $_server_info = $this->misc->getServerInfo();
+
     if (!isset($_server_info['username'])) {
         $destinationurl = $this->utils->getDestinationWithLastTab('server');
 
@@ -123,7 +114,7 @@ $app->get('/redirect[/{subject}]', function (
     /* @scrutinizer ignore-unused */
     $args
 ) {
-    dump($_SESSION);
+    //ddd($_SESSION);
     $subject        = (isset($args['subject'])) ? $args['subject'] : 'root';
     $destinationurl = $this->utils->getDestinationWithLastTab($subject);
 
@@ -142,23 +133,22 @@ $app->map(['GET', 'POST'], '/src/views/{subject}', function (
     if ($subject === 'server') {
         $subject = 'servers';
     }
-    dump($subject, $_SESSION);
     //$this->utils->dump($request->getParams());
     $_server_info = $this->misc->getServerInfo();
 
     $safe_subjects = ($subject === 'servers' || $subject === 'intro' || $subject === 'browser');
 
     if ($this->misc->getServerId() === null && !$safe_subjects) {
-        return $response->withStatus(302)->withHeader('Location', SUBFOLDER . '/src/views/servers');
+        return $response->withStatus(302)->withHeader('Location', SUBFOLDER.'/src/views/servers');
     }
 
     if (!isset($_server_info['username']) && $subject !== 'login' && !$safe_subjects) {
-        $destinationurl = SUBFOLDER . '/src/views/login?server=' . $this->misc->getServerId();
+        $destinationurl = SUBFOLDER.'/src/views/login?server='.$this->misc->getServerId();
 
         return $response->withStatus(302)->withHeader('Location', $destinationurl);
     }
 
-    $className  = '\PHPPgAdmin\Controller\\' . ucfirst($subject) . 'Controller';
+    $className  = '\PHPPgAdmin\Controller\\'.ucfirst($subject).'Controller';
     $controller = new $className($this);
 
     return $controller->render();
@@ -174,8 +164,6 @@ $app->get('/{subject:\w+}', function (
 ) {
     $subject      = (isset($args['subject'])) ? $args['subject'] : 'intro';
     $_server_info = $this->misc->getServerInfo();
-    //dd($_server_info);
-
     $query_string = $request->getUri()->getQuery();
     $server_id    = $request->getQueryParam('server');
 
@@ -208,7 +196,7 @@ $app->get('/', function (
 });
 
 $app->get('[/{path:.*}]', function ($request, $response, $args) {
-    $filepath     = \BASE_PATH . '/' . $args['path'];
+    $filepath     = \BASE_PATH.'/'.$args['path'];
     $query_string = $request->getUri()->getQuery();
 
     $this->utils->dump($query_string, $filepath);
