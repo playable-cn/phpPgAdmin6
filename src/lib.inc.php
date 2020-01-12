@@ -45,14 +45,13 @@ if (!ini_get('session.auto_start')) {
     session_name('PPA_ID');
 
     $use_ssl = isset($_SERVER['HTTPS']) &&
-    isset($conf['HTTPS_COOKIE']) &&
-    boolval($conf['HTTPS_COOKIE']) !== false;
-    session_set_cookie_params(0, null, null, $use_ssl, true);
+        (!isset($conf['HTTPS_COOKIE']) ||
+        boolval($conf['HTTPS_COOKIE']) !== false);
+    session_set_cookie_params(0, '/', null, $use_ssl, true);
 
     session_start();
 }
 
-\Kint::$aliases[] = 'ddd';
 // Polyfill for PHPConsole
 if (isset($conf['php_console']) &&
     class_exists('\PhpConsole\Helper') &&
@@ -65,9 +64,10 @@ if (isset($conf['php_console']) &&
     class PC
     {
         public static function debug() {}
+
     }
 }
-//\PC::dump($phpConsoleHandler);
+\PC::debug($phpConsoleHandler);
 
 ini_set('display_errors', intval(DEBUGMODE));
 ini_set('display_startup_errors', intval(DEBUGMODE));
