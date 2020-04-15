@@ -6,7 +6,6 @@
 
 namespace PHPPgAdmin\Controller;
 
-ini_set('display_errors', 1);
 /**
  * Base controller class.
  *
