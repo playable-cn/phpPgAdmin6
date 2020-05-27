@@ -22,6 +22,12 @@ if (file_exists(BASE_PATH . '/config.inc.php')) {
 } else {
     die('Configuration error: Copy config.inc.php-dist to config.inc.php and edit appropriately.');
 }
+
+if (isset($conf['session_save_handler']) && isset($conf['session_save_path'])) {
+    @ini_set('session.save_handler', $conf['session_save_handler']);
+    @ini_set('session.save_path', $conf['session_save_path']);
+}
+
 $setSession = (defined('PHP_SESSION_ACTIVE') ? session_status() != PHP_SESSION_ACTIVE : !session_id()) && !headers_sent() && !ini_get('session.auto_start');
 
 if ($setSession) {
@@ -44,8 +50,10 @@ if (!defined('ADODB_ERROR_HANDLER_TYPE')) {
 if (!defined('ADODB_ERROR_HANDLER')) {
     define('ADODB_ERROR_HANDLER', '\PHPPgAdmin\ADOdbException::adodb_throw');
 }
-if (!is_writable(session_save_path())) {
-    echo 'Session path "' . session_save_path() . '" is not writable for PHP!';
+if (!isset($conf['session_save_handler'])) {
+    if (!is_writable(session_save_path())) {
+        echo 'Session path "' . session_save_path() . '" is not writable for PHP!';
+    }
 }
 
 ini_set('display_errors', intval(DEBUGMODE));
