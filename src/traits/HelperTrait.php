@@ -200,6 +200,9 @@ trait HelperTrait
         string $whoCalledMe = '',
         $exitAfterwards = false
     ) {
+        if (!DEBUGMODE) {
+            return;
+        }
         if (!$variablesToDump) {
             $variablesToDump = func_get_args();
         }

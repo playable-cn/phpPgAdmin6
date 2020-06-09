@@ -101,6 +101,7 @@ class Connection
             //$this->prtrace($this->conn);
         } catch (\Exception $e) {
             $this->prtrace($e->getMessage(), $e->getTrace());
+            throw($e);
         }
     }
 
