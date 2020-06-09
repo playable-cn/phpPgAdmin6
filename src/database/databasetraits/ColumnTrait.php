@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Database\Traits;
@@ -34,7 +34,7 @@ trait ColumnTrait
         $this->clean($type);
         $this->clean($length);
 
-        if ($length == '') {
+        if ('' === $length) {
             $sql = "ALTER TABLE \"{$f_schema}\".\"{$table}\" ADD COLUMN \"{$column}\" {$type}";
         } else {
             switch ($type) {
@@ -42,16 +42,17 @@ trait ColumnTrait
                 // time zone types
                 case 'timestamp with time zone':
                 case 'timestamp without time zone':
-                    $qual = substr($type, 9);
-                    $sql  = "ALTER TABLE \"{$f_schema}\".\"{$table}\" ADD COLUMN \"{$column}\" timestamp({$length}){$qual}";
+                    $qual = \mb_substr($type, 9);
+                    $sql = "ALTER TABLE \"{$f_schema}\".\"{$table}\" ADD COLUMN \"{$column}\" timestamp({$length}){$qual}";
 
                     break;
                 case 'time with time zone':
                 case 'time without time zone':
-                    $qual = substr($type, 4);
-                    $sql  = "ALTER TABLE \"{$f_schema}\".\"{$table}\" ADD COLUMN \"{$column}\" time({$length}){$qual}";
+                    $qual = \mb_substr($type, 4);
+                    $sql = "ALTER TABLE \"{$f_schema}\".\"{$table}\" ADD COLUMN \"{$column}\" time({$length}){$qual}";
 
                     break;
+
                 default:
                     $sql = "ALTER TABLE \"{$f_schema}\".\"{$table}\" ADD COLUMN \"{$column}\" {$type}({$length})";
             }
@@ -70,25 +71,28 @@ trait ColumnTrait
             }
 
             // DEFAULT clause
-            if ($default != '') {
-                $sql .= ' DEFAULT '.$default;
+            if ('' !== $default) {
+                $sql .= ' DEFAULT ' . $default;
             }
         }
 
         $status = $this->beginTransaction();
-        if ($status != 0) {
+
+        if (0 !== $status) {
             return [-1, $sql];
         }
 
         $status = $this->execute($sql);
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return [-1, $sql];
         }
 
         $status = $this->setComment('COLUMN', $column, $table, $comment);
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return [-1, $sql];
@@ -132,19 +136,21 @@ trait ColumnTrait
         $comment
     ) {
         // Begin transaction
-        $status    = $this->beginTransaction();
-        $sql       = '';
+        $status = $this->beginTransaction();
+        $sql = '';
         $sqlrename = '';
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return [-6, $sql];
         }
 
         // Rename the column, if it has been changed
-        if ($column != $name) {
-            list($status, $sqlrename) = $this->renameColumn($table, $column, $name);
-            if ($status != 0) {
+        if ($column !== $name) {
+            [$status, $sqlrename] = $this->renameColumn($table, $column, $name);
+
+            if (0 !== $status) {
                 $this->rollbackTransaction();
 
                 return [-4, $sql];
@@ -159,13 +165,13 @@ trait ColumnTrait
 
         $toAlter = [];
         // Create the command for changing nullability
-        if ($notnull != $oldnotnull) {
-            $toAlter[] = "ALTER COLUMN \"{$name}\" ".($notnull ? 'SET' : 'DROP').' NOT NULL';
+        if ($notnull !== $oldnotnull) {
+            $toAlter[] = "ALTER COLUMN \"{$name}\" " . ($notnull ? 'SET' : 'DROP') . ' NOT NULL';
         }
 
         // Add default, if it has changed
-        if ($default != $olddefault) {
-            if ($default == '') {
+        if ($default !== $olddefault) {
+            if ('' === $default) {
                 $toAlter[] = "ALTER COLUMN \"{$name}\" DROP DEFAULT";
             } else {
                 $toAlter[] = "ALTER COLUMN \"{$name}\" SET DEFAULT {$default}";
@@ -173,7 +179,7 @@ trait ColumnTrait
         }
 
         // Add type, if it has changed
-        if ($length == '') {
+        if ('' === $length) {
             $ftype = $type;
         } else {
             switch ($type) {
@@ -181,16 +187,17 @@ trait ColumnTrait
                 // time zone types
                 case 'timestamp with time zone':
                 case 'timestamp without time zone':
-                    $qual  = substr($type, 9);
+                    $qual = \mb_substr($type, 9);
                     $ftype = "timestamp({$length}){$qual}";
 
                     break;
                 case 'time with time zone':
                 case 'time without time zone':
-                    $qual  = substr($type, 4);
+                    $qual = \mb_substr($type, 4);
                     $ftype = "time({$length}){$qual}";
 
                     break;
+
                 default:
                     $ftype = "{$type}({$length})";
             }
@@ -201,7 +208,7 @@ trait ColumnTrait
             $ftype .= '[]';
         }
 
-        if ($ftype != $oldtype) {
+        if ($ftype !== $oldtype) {
             $toAlter[] = "ALTER COLUMN \"{$name}\" TYPE {$ftype}";
         }
 
@@ -209,10 +216,11 @@ trait ColumnTrait
         if (!empty($toAlter)) {
             // Initialise an empty SQL string
             $sql = "ALTER TABLE \"{$f_schema}\".\"{$table}\" "
-            .implode(',', $toAlter);
+            . \implode(',', $toAlter);
 
             $status = $this->execute($sql);
-            if ($status != 0) {
+
+            if (0 !== $status) {
                 $this->rollbackTransaction();
 
                 return [-1, $sql];
@@ -221,13 +229,14 @@ trait ColumnTrait
 
         // Update the comment on the column
         $status = $this->setComment('COLUMN', $name, $table, $comment);
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return [-5, $sql];
         }
 
-        return [$this->endTransaction(), $sqlrename.'<br>'.$sql];
+        return [$this->endTransaction(), $sqlrename . '<br>' . $sql];
     }
 
     /**
@@ -261,7 +270,7 @@ trait ColumnTrait
      * @param string $column  The column name to set
      * @param mixed  $default The new default value
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function setColumnDefault($table, $column, $default)
     {
@@ -282,7 +291,7 @@ trait ColumnTrait
      * @param string $column The column to alter
      * @param bool   $state  True to set null, false to set not null
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function setColumnNull($table, $column, $state)
     {
@@ -291,7 +300,7 @@ trait ColumnTrait
         $this->fieldClean($table);
         $this->fieldClean($column);
 
-        $sql = "ALTER TABLE \"{$f_schema}\".\"{$table}\" ALTER COLUMN \"{$column}\" ".($state ? 'DROP' : 'SET').' NOT NULL';
+        $sql = "ALTER TABLE \"{$f_schema}\".\"{$table}\" ALTER COLUMN \"{$column}\" " . ($state ? 'DROP' : 'SET') . ' NOT NULL';
 
         return $this->execute($sql);
     }
@@ -313,6 +322,7 @@ trait ColumnTrait
         $this->fieldClean($column);
 
         $sql = "ALTER TABLE \"{$f_schema}\".\"{$table}\" DROP COLUMN \"{$column}\"";
+
         if ($cascade) {
             $sql .= ' CASCADE';
         }
@@ -328,7 +338,7 @@ trait ColumnTrait
      * @param string $table  The table from which to drop
      * @param string $column The column name to drop default
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function dropColumnDefault($table, $column)
     {

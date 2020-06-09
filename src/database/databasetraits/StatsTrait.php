@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Database\Traits;
@@ -16,7 +16,7 @@ trait StatsTrait
      *
      * @param string $database The database to fetch stats for
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getStatsDatabase($database)
     {
@@ -32,7 +32,7 @@ trait StatsTrait
      *
      * @param string $table The table to fetch stats for
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getStatsTableTuples($table)
     {
@@ -51,7 +51,7 @@ trait StatsTrait
      *
      * @param string $table The table to fetch stats for
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getStatsTableIO($table)
     {
@@ -70,7 +70,7 @@ trait StatsTrait
      *
      * @param string $table The table to fetch index stats for
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getStatsIndexTuples($table)
     {
@@ -89,7 +89,7 @@ trait StatsTrait
      *
      * @param string $table The table to fetch index stats for
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getStatsIndexIO($table)
     {

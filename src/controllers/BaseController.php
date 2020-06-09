@@ -1,34 +1,50 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Controller;
 
-ini_set('display_errors', 1);
+use PHPPgAdmin\ContainerUtils;
+use PHPPgAdmin\XHtml;
+
+\ini_set('display_errors', ContainerUtils::DEBUGMODE);
 /**
  * Base controller class.
- *
- * @package PHPPgAdmin
  */
 class BaseController
 {
     use \PHPPgAdmin\Traits\HelperTrait;
+    /**
+     * @var string
+     */
+    const BASE_PATH = ContainerUtils::BASE_PATH;
+    /**
+     * @var string
+     */
+    const SUBFOLDER = ContainerUtils::SUBFOLDER;
+    /**
+     * @var string
+     */
+    const DEBUGMODE = ContainerUtils::DEBUGMODE;
 
-    protected $container;
-    protected $app;
-    protected $data;
-    protected $database;
-    protected $server_id;
     public $appLangFiles = [];
-    public $appThemes    = [];
-    public $appName      = '';
-    public $appVersion   = '';
-    public $form         = '';
-    public $href         = '';
-    public $lang         = [];
-    public $action       = '';
+
+    public $appThemes = [];
+
+    public $appName = '';
+
+    public $appVersion = '';
+
+    public $form = '';
+
+    public $href = '';
+
+    public $lang = [];
+
+    public $action = '';
+
     public $controller_name;
 
     /**
@@ -37,24 +53,63 @@ class BaseController
      * @var string
      */
     public $view_name;
+
     /**
      * Used to print the title passing its value to $lang.
      *
      * @var string
      */
     public $controller_title = 'base';
-    protected $table_controller;
-    protected $trail_controller;
-    protected $tree_controller;
-    protected $footer_controller;
-    protected $header_controller;
-    protected $scripts = '';
-    public $msg        = '';
+
+    public $msg = '';
+
     public $view;
-    public $plugin_manager;
+
     public $misc;
+
     public $conf;
+
     public $phpMinVer;
+
+    protected $script;
+
+    protected $container;
+
+    protected $app;
+
+    protected $data;
+
+    protected $database;
+
+    protected $server_id;
+
+    /**
+     * @var XHtml\HTMLTableController
+     */
+    protected $_table_controller;
+
+    /**
+     * @var XHtml\HTMLFooterController
+     */
+    protected $_footer_controller;
+
+    /**
+     * @var XHtml\HTMLHeaderController
+     */
+    protected $_header_controller;
+
+    /**
+     * @var XHtml\HTMLNavbarController
+     */
+    protected $_trail_controller;
+
+    /**
+     * @var TreeController
+     */
+    protected $_tree_controller;
+
+    protected $scripts = '';
+
     protected $no_db_connection = false;
 
     /**
@@ -66,27 +121,27 @@ class BaseController
     public function __construct(\Slim\Container $container)
     {
         $this->container = $container;
-        $this->lang      = $container->get('lang');
+        $this->lang = $container->get('lang');
 
-        $this->controller_name = str_replace(__NAMESPACE__.'\\', '', get_class($this));
-        $this->view_name       = str_replace('controller', '', strtolower($this->controller_name));
-        $this->script          = $this->view_name;
+        $this->controller_name = \str_replace(__NAMESPACE__ . '\\', '', \get_class($this));
+        $this->view_name = \str_replace('controller', '', \mb_strtolower($this->controller_name));
+        $this->script = $this->view_name;
 
-        $this->view           = $container->get('view');
-        $this->plugin_manager = $container->get('plugin_manager');
-        $this->msg            = $container->get('msg');
-        $this->appLangFiles   = $container->get('appLangFiles');
+        $this->view = $container->get('view');
+
+        $this->msg = $container->get('msg');
+        $this->appLangFiles = $container->get('appLangFiles');
 
         $this->misc = $container->get('misc');
         $this->conf = $this->misc->getConf();
 
         $this->appThemes = $container->get('appThemes');
-        $this->action    = $container->get('action');
+        $this->action = $container->get('action');
 
-        $this->appName          = $container->get('settings')['appName'];
-        $this->appVersion       = $container->get('settings')['appVersion'];
+        $this->appName = $container->get('settings')['appName'];
+        $this->appVersion = $container->get('settings')['appVersion'];
         $this->postgresqlMinVer = $container->get('settings')['postgresqlMinVer'];
-        $this->phpMinVer        = $container->get('settings')['phpMinVer'];
+        $this->phpMinVer = $container->get('settings')['phpMinVer'];
 
         $msg = $container->get('msg');
 
@@ -103,7 +158,7 @@ class BaseController
             $_server_info = $this->misc->getServerInfo();
             // Redirect to the login form if not logged in
             if (!isset($_server_info['username'])) {
-                $msg = sprintf($this->lang['strlogoutmsg'], $_server_info['desc']);
+                $msg = \sprintf($this->lang['strlogoutmsg'], $_server_info['desc']);
 
                 $servers_controller = new \PHPPgAdmin\Controller\ServersController($container);
 
@@ -113,7 +168,10 @@ class BaseController
     }
 
     /**
-     * Default method to render the controller according to the action parameter.
+     * Default method to render the controller according to the action parameter. It should return with a PSR
+     * responseObject but it prints texts whatsoeever.
+     *
+     * @return string|void
      */
     public function render()
     {
@@ -153,7 +211,7 @@ class BaseController
     {
         $title = $title ? $title : $this->controller_title;
 
-        return $prefix.$this->lang[$title].($suffix ? ': '.$suffix : '');
+        return $prefix . $this->lang[$title] . ($suffix ? ': ' . $suffix : '');
     }
 
     public function getContainer()
@@ -161,60 +219,15 @@ class BaseController
         return $this->container;
     }
 
-    private function _getTableController()
-    {
-        if (null === $this->table_controller) {
-            $this->table_controller = new \PHPPgAdmin\XHtml\HTMLTableController($this->getContainer(), $this->controller_name);
-        }
-
-        return $this->table_controller;
-    }
-
-    private function _getFooterController()
-    {
-        if (null === $this->footer_controller) {
-            $this->footer_controller = new \PHPPgAdmin\XHtml\HTMLFooterController($this->getContainer(), $this->controller_name);
-        }
-
-        return $this->footer_controller;
-    }
-
-    private function _getHeaderController()
-    {
-        if (null === $this->header_controller) {
-            $this->header_controller = new \PHPPgAdmin\XHtml\HTMLHeaderController($this->getContainer(), $this->controller_name);
-        }
-
-        return $this->header_controller;
-    }
-
-    private function _getNavbarController()
-    {
-        if (null === $this->trail_controller) {
-            $this->trail_controller = new \PHPPgAdmin\XHtml\HTMLNavbarController($this->getContainer(), $this->controller_name);
-        }
-
-        return $this->trail_controller;
-    }
-
-    private function _getTreeController()
-    {
-        if (null === $this->tree_controller) {
-            $this->tree_controller = new \PHPPgAdmin\XHtml\TreeController($this->getContainer(), $this->controller_name);
-        }
-
-        return $this->tree_controller;
-    }
-
     /**
      * Display a table of data.
      *
-     * @param \PHPPgAdmin\ADORecordSet|\PHPPgAdmin\ArrayRecordSet $tabledata a set of data to be formatted
-     * @param array                                               $columns   An associative array of columns to be displayed:
-     * @param array                                               $actions   Actions that can be performed on each object:
-     * @param string                                              $place     Place where the $actions are displayed. Like 'display-browse',
-     * @param string                                              $nodata    (optional) Message to display if data set is empty
-     * @param callable                                            $pre_fn    (optional) callback closure for each row
+     * @param \ADORecordSet|\PHPPgAdmin\ArrayRecordSet $tabledata a set of data to be formatted
+     * @param array                                    $columns   An associative array of columns to be displayed:
+     * @param array                                    $actions   Actions that can be performed on each object:
+     * @param string                                   $place     Place where the $actions are displayed. Like 'display-browse',
+     * @param string                                   $nodata    (optional) Message to display if data set is empty
+     * @param callable                                 $pre_fn    (optional) callback closure for each row
      *
      * @return string the html of the table
      */
@@ -227,7 +240,14 @@ class BaseController
         return $html_table->printTable();
     }
 
-    public function adjustTabsForTree($tabs)
+    /**
+     * Hides or show tree tabs according to their properties.
+     *
+     * @param array $tabs The tabs
+     *
+     * @return \PHPPgAdmin\ArrayRecordSet filtered tabs in the form of an ArrayRecordSet
+     */
+    public function adjustTabsForTree(&$tabs)
     {
         $tree = $this->_getTreeController();
 
@@ -251,31 +271,50 @@ class BaseController
         return $tree->printTree($_treedata, $attrs, $section, $print);
     }
 
-    public function printTrail($trail = [], $do_print = true)
+    /**
+     * Prints a trail.
+     *
+     * @param array|string $trail
+     * @param bool         $do_print The do print
+     *
+     * @return string ( description_of_the_return_value )
+     */
+    public function printTrail($trail = [], bool $do_print = true)
     {
-        $from       = __METHOD__;
+        $from = __METHOD__;
         $html_trail = $this->_getNavbarController();
 
         return $html_trail->printTrail($trail, $do_print, $from);
     }
 
-    public function printNavLinks($navlinks, $place, $env = [], $do_print = true)
+    /**
+     * @param (array|mixed)[][] $navlinks
+     * @param string            $place
+     * @param array             $env
+     * @param mixed             $do_print
+     */
+    public function printNavLinks(array $navlinks, string $place, array $env = [], $do_print = true)
     {
-        $from              = __METHOD__;
+        $from = __METHOD__;
         $footer_controller = $this->_getFooterController();
 
         return $footer_controller->printNavLinks($navlinks, $place, $env, $do_print, $from);
     }
 
-    public function printTabs($tabs, $activetab, $do_print = true)
+    public function printTabs(string $tabs, string $activetab, bool $do_print = true)
     {
-        $from       = __METHOD__;
+        $from = __METHOD__;
         $html_trail = $this->_getNavbarController();
 
         return $html_trail->printTabs($tabs, $activetab, $do_print, $from);
     }
 
-    public function printLink($link, $do_print = true, $from = null)
+    /**
+     * @param true        $do_print
+     * @param null|string $from
+     * @param mixed       $link
+     */
+    public function printLink($link, bool $do_print = true, ?string $from = null)
     {
         if (null === $from) {
             $from = __METHOD__;
@@ -286,21 +325,27 @@ class BaseController
         return $html_trail->printLink($link, $do_print, $from);
     }
 
-    public function setReloadDropDatabase($flag)
+    /**
+     * @param true $flag
+     */
+    public function setReloadDropDatabase(bool $flag)
     {
         $footer_controller = $this->_getFooterController();
 
         return $footer_controller->setReloadDropDatabase($flag);
     }
 
-    public function setNoBottomLink($flag)
+    /**
+     * @param true $flag
+     */
+    public function setNoBottomLink(bool $flag)
     {
         $footer_controller = $this->_getFooterController();
 
         return $footer_controller->setNoBottomLink($flag);
     }
 
-    public function printFooter($doBody = true, $template = 'footer.twig')
+    public function printFooter(bool $doBody = true, string $template = 'footer.twig')
     {
         $footer_controller = $this->_getFooterController();
 
@@ -340,41 +385,63 @@ class BaseController
         return $footer_controller->setWindowName($name, $addServer);
     }
 
-    public function setNoOutput($flag)
+    /**
+     * @param true $flag
+     */
+    public function setNoOutput(bool $flag)
     {
         $header_controller = $this->_getHeaderController();
 
         return $header_controller->setNoOutput((bool) $flag);
     }
 
-    public function printHeader($title = '', $script = null, $do_print = true, $template = 'header.twig')
+    /**
+     * @param null|string $script
+     * @param string      $title
+     * @param bool        $do_print
+     * @param string      $template
+     */
+    public function printHeader(string $title = '', ?string $script = null, bool $do_print = true, string $template = 'header.twig')
     {
-        $title             = $title ? $title : $this->headerTitle();
+        $title = $title ? $title : $this->headerTitle();
         $header_controller = $this->_getHeaderController();
 
         return $header_controller->printHeader($title, $script, $do_print, $template);
     }
 
-    public function printBody($doBody = true, $bodyClass = 'detailbody', $onloadInit = false)
+    public function printBody(bool $doBody = true, string $bodyClass = 'detailbody', bool $onloadInit = false)
     {
         $header_controller = $this->_getHeaderController();
 
         return $header_controller->printBody($doBody, $bodyClass, $onloadInit);
     }
 
-    public function printTitle($title, $help = null, $do_print = true)
+    /**
+     * @param null|string $help
+     * @param string      $title
+     * @param bool        $do_print
+     */
+    public function printTitle(string $title, ?string $help = null, bool $do_print = true)
     {
         $header_controller = $this->_getHeaderController();
 
         return $header_controller->printTitle($title, $help, $do_print);
     }
 
-    public function getRequestParam($key, $default = null)
+    /**
+     * @param null|string $default
+     * @param string      $key
+     */
+    public function getRequestParam(string $key, ?string $default = null)
     {
         return $this->container->requestobj->getParam($key, $default);
     }
 
-    public function getPostParam($key, $default = null)
+    /**
+     * @param null|array|string $default
+     * @param string            $key
+     */
+    public function getPostParam(string $key, $default = null)
     {
         return $this->container->requestobj->getParsedBodyParam($key, $default);
     }
@@ -395,10 +462,12 @@ class BaseController
     public function printMsg($msg, $do_print = true)
     {
         $html = '';
-        $msg  = htmlspecialchars(\PHPPgAdmin\Traits\HelperTrait::br2ln($msg));
-        if ('' != $msg) {
-            $html .= '<p class="message">'.nl2br($msg).'</p>'.PHP_EOL;
+        $msg = \htmlspecialchars(\PHPPgAdmin\Traits\HelperTrait::br2ln($msg));
+
+        if ('' !== $msg) {
+            $html .= '<p class="message">' . \nl2br($msg) . '</p>' . \PHP_EOL;
         }
+
         if ($do_print) {
             echo $html;
 
@@ -406,5 +475,50 @@ class BaseController
         }
 
         return $html;
+    }
+
+    private function _getTableController()
+    {
+        if (null === $this->_table_controller) {
+            $this->_table_controller = new XHtml\HTMLTableController($this->getContainer(), $this->controller_name);
+        }
+
+        return $this->_table_controller;
+    }
+
+    private function _getFooterController()
+    {
+        if (null === $this->_footer_controller) {
+            $this->_footer_controller = new XHtml\HTMLFooterController($this->getContainer(), $this->controller_name);
+        }
+
+        return $this->_footer_controller;
+    }
+
+    private function _getHeaderController()
+    {
+        if (null === $this->_header_controller) {
+            $this->_header_controller = new XHtml\HTMLHeaderController($this->getContainer(), $this->controller_name);
+        }
+
+        return $this->_header_controller;
+    }
+
+    private function _getNavbarController()
+    {
+        if (null === $this->_trail_controller) {
+            $this->_trail_controller = new XHtml\HTMLNavbarController($this->getContainer(), $this->controller_name);
+        }
+
+        return $this->_trail_controller;
+    }
+
+    private function _getTreeController()
+    {
+        if (null === $this->_tree_controller) {
+            $this->_tree_controller = new TreeController($this->getContainer(), $this->controller_name);
+        }
+
+        return $this->_tree_controller;
     }
 }

@@ -1,19 +1,44 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace Helper;
 
+\defined('IN_TEST') || \define('IN_TEST', true);
+use PHPPgAdmin\ContainerUtils;
+
+if (!\is_readable(ContainerUtils::BASE_PATH . '/src/lib.inc.php')) {
+    die('lib.inc.php is not readable');
+}
+\defined('IN_TEST') || \define('IN_TEST', true);
+
+require_once ContainerUtils::BASE_PATH . '/src/lib.inc.php';
 // here you can define custom actions
 // all public methods declared in helper class will be available in $I
 
 class Unit extends \Codeception\Module
 {
-    const DIRNAME = __DIR__;
+    /**
+     * @var string
+     */
+    const BASE_PATH = ContainerUtils::BASE_PATH;
+    /**
+     * @var string
+     */
+    const SUBFOLDER = ContainerUtils::SUBFOLDER;
+    /**
+     * @var string
+     */
+    const DEBUGMODE = ContainerUtils::DEBUGMODE;
 
-    private static $container;
+    /**
+     * @var \PHPPgAdmin
+     */
+    private static $_container;
+
+    private static $_conf;
 
     public static function getDir()
     {
@@ -22,13 +47,15 @@ class Unit extends \Codeception\Module
 
     public static function getContainer()
     {
-        if (!static::$container) {
-            require_once self::DIRNAME.'/../../../src/lib.inc.php';
-            self::$container = $container;
+        //$conf = self::getConf();
+        if (!static::$_container) {
+            self::$_container = ContainerUtils::getContainerInstance();
         }
 
-        \Codeception\Util\Debug::debug('BASE_PATH is '.\BASE_PATH);
+        //dump(PHP_SAPI);
 
-        return self::$container;
+        //\Codeception\Util\Debug::debug('BASE_PATH is ' . \BASE_PATH);
+
+        return self::$_container;
     }
 }

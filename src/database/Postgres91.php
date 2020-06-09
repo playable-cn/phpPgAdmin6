@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Database;
@@ -13,8 +13,6 @@ namespace PHPPgAdmin\Database;
 
 /**
  * Id: Postgres82.php,v 1.10 2007/12/28 16:21:25 ioguix Exp $.
- *
- * @package PHPPgAdmin
  */
 class Postgres91 extends Postgres92
 {
@@ -27,11 +25,11 @@ class Postgres91 extends Postgres92
      *
      * @param null|string $database (optional) Find only connections to specified database
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet A recordset
      */
     public function getProcesses($database = null)
     {
-        if ($database === null) {
+        if (null === $database) {
             $sql = 'SELECT datname, usename, procpid AS pid, waiting, current_query AS query, query_start
 				FROM pg_catalog.pg_stat_activity
 				ORDER BY datname, usename, procpid';
@@ -53,7 +51,7 @@ class Postgres91 extends Postgres92
      *
      * @param bool $all Include all tablespaces (necessary when moving objects back to the default space)
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet A recordset
      */
     public function getTablespaces($all = false)
     {
@@ -77,7 +75,7 @@ class Postgres91 extends Postgres92
      *
      * @param string $spcname
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet A recordset
      */
     public function getTablespace($spcname)
     {

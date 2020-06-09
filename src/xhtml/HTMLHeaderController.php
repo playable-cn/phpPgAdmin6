@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\XHtml;
@@ -12,7 +12,8 @@ namespace PHPPgAdmin\XHtml;
 class HTMLHeaderController extends HTMLController
 {
     public $controller_name = 'HTMLHeaderController';
-    private $_no_output     = false;
+
+    private $_no_output = false;
 
     /**
      * Sets the value of private member variable $_no_output.
@@ -41,39 +42,37 @@ class HTMLHeaderController extends HTMLController
      */
     public function printHeader($title = '', $script = null, $do_print = true, $template = 'header.twig')
     {
-        if (function_exists('newrelic_disable_autorum')) {
+        if (\function_exists('newrelic_disable_autorum')) {
             newrelic_disable_autorum();
         }
 
-        $lang           = $this->lang;
-        $plugin_manager = $this->plugin_manager;
+        $lang = $this->lang;
 
         $viewVars = [];
 
-        $viewVars['dir']            = (0 != strcasecmp($lang['applangdir'], 'ltr')) ? ' dir="'.htmlspecialchars($lang['applangdir']).'"' : '';
+        $viewVars['dir'] = (0 !== \strcasecmp($lang['applangdir'], 'ltr')) ? ' dir="' . \htmlspecialchars($lang['applangdir']) . '"' : '';
         $viewVars['headertemplate'] = $template;
-        $viewVars['title']          = ('' !== $title) ? ' - '.$title : '';
-        $viewVars['appName']        = htmlspecialchars($this->appName);
+        $viewVars['title'] = ('' !== $title) ? ' - ' . $title : '';
+        $viewVars['appName'] = \htmlspecialchars($this->appName);
 
         $viewVars['script'] = $script;
-        //$this->prtrace($viewVars);
         $header_html = $this->view->fetch($template, $viewVars);
 
         /*$plugins_head = [];
         $_params      = ['heads' => &$plugins_head];
-
-        $plugin_manager->doHook('head', $_params);
 
         foreach ($plugins_head as $tag) {
         $header_html .= $tag;
         }*/
 
         if (!$this->_no_output && $do_print) {
-            header('Content-Type: text/html; charset=utf-8');
+            \header('Content-Type: text/html; charset=utf-8');
             echo $header_html;
-        } else {
-            return $header_html;
+
+            return '';
         }
+
+        return $header_html;
     }
 
     /**
@@ -82,20 +81,24 @@ class HTMLHeaderController extends HTMLController
      * @param bool   $doBody     True to output body tag, false to return
      * @param string $bodyClass  - name of body class
      * @param bool   $onloadInit - if true, call init() on body load event
+     *
+     * @return string the parsed template
      */
     public function printBody($doBody = true, $bodyClass = 'detailbody', $onloadInit = false)
     {
-        $bodyClass = $this->lang['applangdir'].' '.htmlspecialchars($bodyClass);
-        $onload    = ($onloadInit ? 'onload="init();" ' : '');
+        $bodyClass = $this->lang['applangdir'] . ' ' . \htmlspecialchars($bodyClass);
+        $onload = ($onloadInit ? 'onload="init();" ' : '');
 
-        $bodyHtml = sprintf('<body data-controller="%s" class="%s" %s >', $this->controller_name, $bodyClass, $onload);
-        $bodyHtml .= PHP_EOL;
+        $bodyHtml = \sprintf('<body data-controller="%s" class="%s" %s >', $this->controller_name, $bodyClass, $onload);
+        $bodyHtml .= \PHP_EOL;
 
         if (!$this->_no_output && $doBody) {
             echo $bodyHtml;
-        } else {
-            return $bodyHtml;
+
+            return '';
         }
+
+        return $bodyHtml;
     }
 
     /**
@@ -104,17 +107,21 @@ class HTMLHeaderController extends HTMLController
      * @param string $title    Title, already escaped
      * @param string $help     (optional) The identifier for the help link
      * @param bool   $do_print
+     *
+     * @return string the parsed template
      */
     public function printTitle($title, $help = null, $do_print = true)
     {
         $title_html = '<h2>';
-        $title_html .= $this->misc->printHelp($title, $help, false);
-        $title_html .= '</h2>'.PHP_EOL;
+        $title_html .= $this->view->printHelp($title, $help, false);
+        $title_html .= '</h2>' . \PHP_EOL;
 
         if ($do_print) {
             echo $title_html;
-        } else {
-            return $title_html;
+
+            return '';
         }
+
+        return $title_html;
     }
 }

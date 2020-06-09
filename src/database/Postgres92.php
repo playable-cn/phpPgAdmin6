@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Database;
@@ -12,7 +12,8 @@ namespace PHPPgAdmin\Database;
  */
 class Postgres92 extends Postgres93
 {
-    public $typIndexes    = ['BTREE', 'RTREE', 'GIST', 'GIN', 'HASH'];
+    public $typIndexes = ['BTREE', 'RTREE', 'GIST', 'GIN', 'HASH'];
+
     public $major_version = 9.2;
 
     /**
@@ -20,11 +21,11 @@ class Postgres92 extends Postgres93
      *
      * @param null|string $database (optional) Find only connections to specified database
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet A recordset
      */
     public function getProcesses($database = null)
     {
-        if ($database === null) {
+        if (null === $database) {
             $sql = "SELECT datname, usename, pid, waiting, state_change as query_start,
                   case when state='idle in transaction' then '<IDLE> in transaction' when state = 'idle' then '<IDLE>' else query end as query
 				FROM pg_catalog.pg_stat_activity
@@ -46,7 +47,7 @@ class Postgres92 extends Postgres93
      *
      * @param bool $all Include all tablespaces (necessary when moving objects back to the default space)
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet A recordset
      */
     public function getTablespaces($all = false)
     {
@@ -70,9 +71,9 @@ class Postgres92 extends Postgres93
     /**
      * Retrieves a tablespace's information.
      *
-     * @param $spcname
+     * @param string $spcname
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet A recordset
      */
     public function getTablespace($spcname)
     {

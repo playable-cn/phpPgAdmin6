@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Database\Traits;
@@ -14,10 +14,10 @@ trait FtsTrait
     /**
      * Creates a new FTS configuration.
      *
-     * @param string $cfgname  The name of the FTS configuration to create
-     * @param string $parser   The parser to be used in new FTS configuration
-     * @param string $template The existing FTS configuration to be used as template for the new one
-     * @param string $comment  If omitted, defaults to nothing
+     * @param string       $cfgname  The name of the FTS configuration to create
+     * @param array|string $parser   The parser to be used in new FTS configuration
+     * @param array|string $template The existing FTS configuration to be used as template for the new one
+     * @param string       $comment  If omitted, defaults to nothing
      *
      * @return bool|int 0 success
      *
@@ -32,38 +32,43 @@ trait FtsTrait
         $this->fieldClean($cfgname);
 
         $sql = "CREATE TEXT SEARCH CONFIGURATION \"{$f_schema}\".\"{$cfgname}\" (";
-        if ($parser != '') {
+
+        if ('' !== $parser) {
             $this->fieldClean($parser['schema']);
             $this->fieldClean($parser['parser']);
             $parser = "\"{$parser['schema']}\".\"{$parser['parser']}\"";
             $sql .= " PARSER = {$parser}";
         }
-        if ($template != '') {
+
+        if ('' !== $template) {
             $this->fieldClean($template['schema']);
             $this->fieldClean($template['name']);
             $sql .= " COPY = \"{$template['schema']}\".\"{$template['name']}\"";
         }
         $sql .= ')';
 
-        if ($comment != '') {
+        if ('' !== $comment) {
             $status = $this->beginTransaction();
-            if ($status != 0) {
+
+            if (0 !== $status) {
                 return -1;
             }
         }
 
         // Create the FTS configuration
         $status = $this->execute($sql);
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return -1;
         }
 
         // Set the comment
-        if ($comment != '') {
+        if ('' !== $comment) {
             $status = $this->setComment('TEXT SEARCH CONFIGURATION', $cfgname, '', $comment);
-            if ($status != 0) {
+
+            if (0 !== $status) {
                 $this->rollbackTransaction();
 
                 return -1;
@@ -82,7 +87,7 @@ trait FtsTrait
      *
      * @param bool $all if false, returns schema qualified FTS confs
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return \ADORecordSet|int
      */
     public function getFtsConfigurations($all = true)
     {
@@ -116,7 +121,7 @@ trait FtsTrait
      *
      * @param string $ftscfg Name of the FTS configuration
      *
-     * @return \PHPPgAdmin\ADORecordSet recordset
+     * @return \ADORecordSet|int
      */
     public function getFtsConfigurationMap($ftscfg)
     {
@@ -156,7 +161,7 @@ trait FtsTrait
      *
      * @param bool $all if false, return only Parsers from the current schema
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return \ADORecordSet|int
      */
     public function getFtsParsers($all = true)
     {
@@ -185,7 +190,7 @@ trait FtsTrait
      *
      * @param bool $all if false, return only Dics from the current schema
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return \ADORecordSet|int
      */
     public function getFtsDictionaries($all = true)
     {
@@ -211,7 +216,7 @@ trait FtsTrait
     /**
      * Returns all FTS dictionary templates available.
      *
-     * @return \PHPPgAdmin\ADORecordSet all FTS dictionary templates available
+     * @return \ADORecordSet|int
      */
     public function getFtsDictionaryTemplates()
     {
@@ -242,7 +247,7 @@ trait FtsTrait
      * @param string $ftscfg  The configuration's name
      * @param bool   $cascade true to Cascade to dependenced objects
      *
-     * @return int 0 if operation was successful
+     * @return \ADORecordSet|int
      */
     public function dropFtsConfiguration($ftscfg, $cascade)
     {
@@ -251,6 +256,7 @@ trait FtsTrait
         $this->fieldClean($ftscfg);
 
         $sql = "DROP TEXT SEARCH CONFIGURATION \"{$f_schema}\".\"{$ftscfg}\"";
+
         if ($cascade) {
             $sql .= ' CASCADE';
         }
@@ -264,7 +270,7 @@ trait FtsTrait
      * @param string $ftsdict The dico's name
      * @param bool   $cascade Cascade to dependenced objects
      *
-     * @return int 0 if operation was successful
+     * @return \ADORecordSet|int
      *
      * @todo Support of dictionary templates dropping
      */
@@ -276,6 +282,7 @@ trait FtsTrait
 
         $sql = 'DROP TEXT SEARCH DICTIONARY';
         $sql .= " \"{$f_schema}\".\"{$ftsdict}\"";
+
         if ($cascade) {
             $sql .= ' CASCADE';
         }
@@ -295,7 +302,8 @@ trait FtsTrait
     public function updateFtsConfiguration($cfgname, $comment, $name)
     {
         $status = $this->beginTransaction();
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return -1;
@@ -304,21 +312,23 @@ trait FtsTrait
         $this->fieldClean($cfgname);
 
         $status = $this->setComment('TEXT SEARCH CONFIGURATION', $cfgname, '', $comment);
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return -1;
         }
 
         // Only if the name has changed
-        if ($name != $cfgname) {
+        if ($name !== $cfgname) {
             $f_schema = $this->_schema;
             $this->fieldClean($f_schema);
             $this->fieldClean($name);
 
-            $sql    = "ALTER TEXT SEARCH CONFIGURATION \"{$f_schema}\".\"{$cfgname}\" RENAME TO \"{$name}\"";
+            $sql = "ALTER TEXT SEARCH CONFIGURATION \"{$f_schema}\".\"{$cfgname}\" RENAME TO \"{$name}\"";
             $status = $this->execute($sql);
-            if ($status != 0) {
+
+            if (0 !== $status) {
                 $this->rollbackTransaction();
 
                 return -1;
@@ -359,13 +369,15 @@ trait FtsTrait
         $this->fieldClean($option);
 
         $sql = 'CREATE TEXT SEARCH';
+
         if ($isTemplate) {
             $sql .= " TEMPLATE \"{$f_schema}\".\"{$dictname}\" (";
-            if ($lexize != '') {
+
+            if ('' !== $lexize) {
                 $sql .= " LEXIZE = {$lexize}";
             }
 
-            if ($init != '') {
+            if ('' !== $init) {
                 $sql .= ", INIT = {$init}";
             }
 
@@ -373,14 +385,16 @@ trait FtsTrait
             $whatToComment = 'TEXT SEARCH TEMPLATE';
         } else {
             $sql .= " DICTIONARY \"{$f_schema}\".\"{$dictname}\" (";
-            if ($template != '') {
+
+            if ('' !== $template) {
                 $this->fieldClean($template['schema']);
                 $this->fieldClean($template['name']);
                 $template = "\"{$template['schema']}\".\"{$template['name']}\"";
 
                 $sql .= " TEMPLATE = {$template}";
             }
-            if ($option != '') {
+
+            if ('' !== $option) {
                 $sql .= ", {$option}";
             }
 
@@ -390,25 +404,28 @@ trait FtsTrait
 
         /* if comment, begin a transaction to
          * run both commands */
-        if ($comment != '') {
+        if ('' !== $comment) {
             $status = $this->beginTransaction();
-            if ($status != 0) {
+
+            if (0 !== $status) {
                 return -1;
             }
         }
 
         // Create the FTS dictionary
         $status = $this->execute($sql);
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return -1;
         }
 
         // Set the comment
-        if ($comment != '') {
+        if ('' !== $comment) {
             $status = $this->setComment($whatToComment, $dictname, '', $comment);
-            if ($status != 0) {
+
+            if (0 !== $status) {
                 $this->rollbackTransaction();
 
                 return -1;
@@ -432,7 +449,8 @@ trait FtsTrait
     public function updateFtsDictionary($dictname, $comment, $name)
     {
         $status = $this->beginTransaction();
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return -1;
@@ -440,21 +458,23 @@ trait FtsTrait
 
         $this->fieldClean($dictname);
         $status = $this->setComment('TEXT SEARCH DICTIONARY', $dictname, '', $comment);
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return -1;
         }
 
         // Only if the name has changed
-        if ($name != $dictname) {
+        if ($name !== $dictname) {
             $f_schema = $this->_schema;
             $this->fieldClean($f_schema);
             $this->fieldClean($name);
 
-            $sql    = "ALTER TEXT SEARCH DICTIONARY \"{$f_schema}\".\"{$dictname}\" RENAME TO \"{$name}\"";
+            $sql = "ALTER TEXT SEARCH DICTIONARY \"{$f_schema}\".\"{$dictname}\" RENAME TO \"{$name}\"";
             $status = $this->execute($sql);
-            if ($status != 0) {
+
+            if (0 !== $status) {
                 $this->rollbackTransaction();
 
                 return -1;
@@ -469,7 +489,7 @@ trait FtsTrait
      *
      * @param string $ftsdict The name of the FTS dictionary
      *
-     * @return \PHPPgAdmin\ADORecordSet recordset of FTS dictionary information
+     * @return \ADORecordSet|int
      */
     public function getFtsDictionaryByName($ftsdict)
     {
@@ -504,13 +524,13 @@ trait FtsTrait
      * @param string $action   What to do with the mapping: add, alter or drop
      * @param string $dictname Dictionary that will process tokens given or null in case of drop action
      *
-     * @return int 0 if operation was successful
+     * @return \ADORecordSet|int
      *
      * @internal param string $cfgname The name of the FTS configuration to alter
      */
     public function changeFtsMapping($ftscfg, $mapping, $action, $dictname = null)
     {
-        if (count($mapping) > 0) {
+        if (0 < \count($mapping)) {
             $f_schema = $this->_schema;
             $this->fieldClean($f_schema);
             $this->fieldClean($ftscfg);
@@ -526,6 +546,7 @@ trait FtsTrait
                     $whatToDo = 'DROP';
 
                     break;
+
                 default:
                     $whatToDo = 'ADD';
 
@@ -533,8 +554,9 @@ trait FtsTrait
             }
 
             $sql = "ALTER TEXT SEARCH CONFIGURATION \"{$f_schema}\".\"{$ftscfg}\" {$whatToDo} MAPPING FOR ";
-            $sql .= implode(',', $mapping);
-            if ($action != 'drop' && !empty($dictname)) {
+            $sql .= \implode(',', $mapping);
+
+            if ('drop' !== $action && !empty($dictname)) {
                 $sql .= " WITH {$dictname}";
             }
 
@@ -550,7 +572,7 @@ trait FtsTrait
      * @param string $ftscfg  The name of the FTS configuration
      * @param string $mapping The name of the mapping
      *
-     * @return \PHPPgAdmin\ADORecordSet FTS configuration information
+     * @return \ADORecordSet|int
      */
     public function getFtsMappingByName($ftscfg, $mapping)
     {
@@ -565,7 +587,7 @@ trait FtsTrait
             WHERE c.cfgname = '{$ftscfg}'
                 AND n.nspname='{$c_schema}'");
 
-        $oid       = $oidSet->fields['oid'];
+        $oid = $oidSet->fields['oid'];
         $cfgparser = $oidSet->fields['cfgparser'];
 
         $tokenIdSet = $this->selectSet("SELECT tokid
@@ -590,7 +612,7 @@ trait FtsTrait
      *
      * @param string $ftscfg The config's name that use the parser
      *
-     * @return int 0 if operation was successful
+     * @return \ADORecordSet|int
      */
     public function getFtsMappings($ftscfg)
     {
@@ -608,7 +630,7 @@ trait FtsTrait
      *
      * @param string $ftscfg The name of the FTS configuration
      *
-     * @return \PHPPgAdmin\ADORecordSet FTS configuration information
+     * @return \ADORecordSet|int
      */
     public function getFtsConfigurationByName($ftscfg)
     {

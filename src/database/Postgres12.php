@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Database;
@@ -25,10 +25,10 @@ class Postgres12 extends Postgres11
      *
      * @param string $table The table name
      *
-     * @return false
+     * @return bool
      */
     public function hasObjectID($table)
     {
-        return null;
+        return false;
     }
 }

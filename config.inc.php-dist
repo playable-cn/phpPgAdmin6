@@ -1,146 +1,121 @@
 <?php
+// Allows to load yaml config. Matching keys will override config defined in this file
+use Symfony\Component\Yaml\Yaml;
 
-/**
-* Central phpPgAdmin configuration.  As a user you may modify the
-* settings here for your particular configuration.
-*
-* $Id: config.inc.php-dist,v 1.55 2008/02/18 21:10:31 xzilla Exp $
-*/
+$conf = [
+    /**
+     * Change this parameter ONLY if you mean to serve phpPgAdmin from a subfolder
+     * e.g for `https://www.server.com/phppga`  this parameter should be `/phppga`
+     * (leading slash, no trailing slash)
+     * 
+     * If you mean to serve phpPgAdmin6 in the document root (e.g `https://www.server.com`)
+     * this parameter must be an empty string
+     */
+    'subfolder'     => '',
+    
+	/**
+	 * enable this to calculate schema and table sizes. This will have a performance impact
+	 * e.g. $conf['display_sizes'] = true
+	 *
+	 * you can also enable it specifically for tables and or schemas:
+	 * $conf['display_sizes'] = ['schemas'=>false,'tables'=>true];
+	 */
+    'display_sizes' => false,
 
+	/**
+	 * Set to true if you want to enable debugging output
+	 */
+    'debugmode'     => false,
 
+    /**
+     * Don't touch this value. It's used to inform the config structure has a breaking change
+     * 
+     */
+    'version'=> 61
 
+];
 
-
-$conf['debugmode'] = false;
-
-$conf['register_debuggers']=function() {
-	// If debugmode is active, and $conf['register_debuggers']
-	// is a function (or a callable), it will be invoked before 
-	// instancing the app's container
-	define('THIS_WAS_PRODUCTION',false);
-	// e.g. register Whoops as exception handler
-	if (THIS_WAS_PRODUCTION
-	   && class_exists('Whoops\Run')) {
+$conf['register_debuggers'] = function () {
+    // If debugmode is active, and $conf['register_debuggers']
+    // is a function (or a callable), it will be invoked before
+    // instancing the app's container
+    define('THIS_WAS_PRODUCTION', false);
+    // e.g. register Whoops as exception handler
+    if (THIS_WAS_PRODUCTION
+        && class_exists('Whoops\Run')) {
         $whoops = new Whoops\Run();
         $whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler());
         $whoops->register();
     }
 
-  	// Using PHP-Console
-  	// PHP_CONSOLE doesn't work on PHP 7.4 yet
-	// https://github.com/barbushin/php-console
-	// (Only in Chrome)
-  if (THIS_WAS_PRODUCTION && 
-    version_compare(PHP_VERSION, 7.4, '<') && 
-    class_exists('PhpConsole\Handler')) {
-	    $phpConsoleHandler = \PhpConsole\Handler::getInstance();
-	 	$connector=$phpConsoleHandler->getConnector();
-	 	$connector->setPassword('yohoho123', true);
-	 	$connector->enableSslOnlyMode();
-		$phpConsoleHandler->start(); 
-	}
+    // Using PHP-Console
+    // PHP_CONSOLE doesn't work on PHP 7.4 yet
+    // https://github.com/barbushin/php-console
+    // (Only in Chrome)
+    if (THIS_WAS_PRODUCTION &&
+        version_compare(PHP_VERSION, 7.4, '<') &&
+        class_exists('PhpConsole\Handler')) {
+        $phpConsoleHandler = \PhpConsole\Handler::getInstance();
+        $connector         = $phpConsoleHandler->getConnector();
+        $connector->setPassword('yohoho123', true);
+        $connector->enableSslOnlyMode();
+        $phpConsoleHandler->start();
+    }
 
-	// Example with Kint
-	if (THIS_WAS_PRODUCTION && 
-		class_exists('Kint')) {
-	    \Kint::$enabled_mode                 = true;
-	    \Kint\Renderer\RichRenderer::$folder = false;
-		function ddd(...$v)
-		{
-	    	\Kint::dump(...$v);
-	    	exit;
-		}
-		
-		\Kint::$aliases[] = 'ddd';
-	}
+    // Example with Kint
+    if (THIS_WAS_PRODUCTION &&
+        class_exists('Kint')) {
+        \Kint::$enabled_mode                 = true;
+        \Kint\Renderer\RichRenderer::$folder = false;
+        function ddd(...$v)
+        {
+            \Kint::dump(...$v);
+            exit;
+        }
+
+        \Kint::$aliases[] = 'ddd';
+    }
 };
-
-
 
 // optionally, set a path for your error log, relative to this project root
 // $conf['error_log']='temp/phppga.php_error.log';
 
-
-// enable this to calculate schema and table sizes
-// e.g. $conf['display_sizes'] = ['schemas'=>false,'tables'=>true];
-$conf['display_sizes'] = false;
-
 // An example server.  Create as many of these as you wish,
 // indexed from zero upwards.
+$server_index = 0;
 
-// Display name for the server on the login screen
-$conf['servers'][0]['desc'] = 'PostgreSQL';
-
-// Hostname or IP address for server.  Use '' for UNIX domain socket.
-// use 'localhost' for TCP/IP connection on this computer
-$conf['servers'][0]['host'] = '';
-
-// Database port on server (5432 is the PostgreSQL default)
-$conf['servers'][0]['port'] = 5432;
-
-// Database SSL mode
-// Possible options: disable, allow, prefer, require
-// To require SSL on older servers use option: legacy
-// To ignore the SSL mode, use option: unspecified
-$conf['servers'][0]['sslmode'] = 'allow';
-
-// Change the default database only if you cannot connect to template1.
-// For a PostgreSQL 8.1+ server, you can set this to 'postgres'.
-$conf['servers'][0]['defaultdb'] = 'template1';
-
-// Specify the path to the database dump utilities for this server.
-// You can set these to '' if no dumper is available.
-$conf['servers'][0]['pg_dump_path'] = '/usr/bin/pg_dump';
-$conf['servers'][0]['pg_dumpall_path'] = '/usr/bin/pg_dumpall';
-
-// Example for a second server (PostgreSQL for Windows)
-//$conf['servers'][1]['desc'] = 'Test Server';
-//$conf['servers'][1]['host'] = '127.0.0.1';
-//$conf['servers'][1]['port'] = 5432;
-//$conf['servers'][1]['sslmode'] = 'allow';
-//$conf['servers'][1]['defaultdb'] = 'template1';
-//$conf['servers'][1]['pg_dump_path'] = 'C:\\Program Files\\PostgreSQL\\8.0\\bin\\pg_dump.exe';
-//$conf['servers'][1]['pg_dumpall_path'] = 'C:\\Program Files\\PostgreSQL\\8.0\\bin\\pg_dumpall.exe';
-
-
-/* Groups definition */
-/* Groups allow administrators to logicaly group servers together under
- * group nodes in the left browser tree
- *
- * The group '0' description
+/**
+ * $conf['servers'] is an array that holds (at least) one server block.
+ * @see https://github.com/HuasoFoundries/phpPgAdmin6/wiki/Config:-servers
+ * 
  */
-//$conf['srv_groups'][0]['desc'] = 'group one';
+$conf['servers'][$server_index] = [
+    // Display name for the server on the login screen
+    'desc'            => 'PostgreSQL',
 
-/* Add here servers indexes belonging to the group '0' seperated by comma */
-//$conf['srv_groups'][0]['servers'] = '0,1,2';
+    // Hostname or IP address for server.  Use '' for UNIX domain socket.
+    // use 'localhost' for TCP/IP connection on this computer
+    'host'            => '',
 
-/* A server can belong to multi groups. Here server 1 is referenced in both
- * 'group one' and 'group two'*/
-//$conf['srv_groups'][1]['desc'] = 'group two';
-//$conf['srv_groups'][1]['servers'] = '3,1';
+    // Database port on server (5432 is the PostgreSQL default)
+    'port'            => 5432,
 
-/* A group can be nested in one or more existing groups using the 'parents'
- * parameter. Here the group 'group three' contains only one server and will
- * appear as a subgroup in both 'group one' and 'group two':
- */
-//$conf['srv_groups'][2]['desc'] = 'group three';
-//$conf['srv_groups'][2]['servers'] = '4';
-//$conf['srv_groups'][2]['parents'] = '0,1';
+    // Database SSL mode
+    // Possible options: disable, allow, prefer, require
+    // To require SSL on older servers use option: legacy
+    // To ignore the SSL mode, use option: unspecified
+    'sslmode'         => 'allow',
 
-/* Warning: Only groups with no parents appears at the root of the tree. */
+    // Change the default database only if you cannot connect to template1.
+    // For a PostgreSQL 8.1+ server, you can set this to 'postgres'.
+    'defaultdb'       => 'template1',
 
-/* You can apply specific theme depending on servers, users and databases
- * The priority order is :
- *   * the theme defined for a server
- *   * the theme defined for a database apply over the server one
- *   * the theme defined for a user apply over the database one
- */
-/* Example for servers */
-//$conf['servers'][0]['theme']['default'] = 'default';
-/* Example for users */
-//$conf['servers'][0]['theme']['user']['specific_user'] = 'default';
-/* Example for databases */
-//$conf['servers'][0]['theme']['db']['specific_db'] = 'default';
+    // Specify the path to the database dump utilities for this server.
+    // You can set these to '' if no dumper is available.
+    'pg_dump_path'    => '/usr/bin/pg_dump',
+    'pg_dumpall_path' => '/usr/bin/pg_dumpall'
+];
+
 
 // Default language. E.g.: 'english', 'polish', etc.  See lang/ directory
 // for all possibilities. If you specify 'auto' (the default) it will use
@@ -211,18 +186,32 @@ $conf['help_base'] = 'http://www.postgresql.org/docs/%s/interactive/';
 // Time in seconds. If set to 0, refreshing data using ajax will be disabled (locks and activity pages)
 $conf['ajax_refresh'] = 3;
 
-/** Plugins management
- * Add plugin names to the following array to activate them
- * Example:
- *   $conf['plugins'] = array(
- *     'Example',
- *     'Slony'
- *   );
- */
-$conf['plugins'] = [];
+// If there's a config.yml in the root folder, parse it and merge its contents with $conf array
+// see config.example.yml
+$yamlConfigPath = implode(DIRECTORY_SEPARATOR, [__DIR__, 'config.yml']);
+if (\is_readable($yamlConfigPath) && \class_exists('Symfony\Component\Yaml\Yaml')) {
+    try {
+        $yamlConfig = Symfony\Component\Yaml\Yaml::parseFile($yamlConfigPath);
+        // Servers and srv_groups must be merged beforehand
+        $servers = $conf['servers'] ?? [];
+        foreach ($yamlConfig['servers'] ?? [] as $index => $srv) {
+            $servers[] = $srv;
+        }
+        $srv_groups = $conf['srv_groups'] ?? [];
+        foreach ($yamlConfig['srv_groups'] ?? [] as $index => $srv_group) {
+            $srv_groups[] = $srv;
+        }
 
-/*****************************************
- * Don't modify anything below this line *
- *****************************************/
+        $yamlConfig['srv_groups'] = array_merge([
+            $conf['srv_groups'] ?? [],
+            $yamlConfig['srv_groups'] ?? [],
+        ]);
+        $conf = \array_merge($conf, $yamlConfig);
 
-$conf['version'] = 60;
+        $conf['servers']    = $servers ?? [];
+        $conf['srv_groups'] = $srv_groups ?? [];
+    } catch (\Exception $e) {
+        die($e->getMessage());
+        \error_log($e->getTraceAsString());
+    }
+}

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Database\Traits;
@@ -16,7 +16,7 @@ trait TypeTrait
      * built-in function, and hence we need to do it manually.
      *
      * @param string $typname The name of the type
-     * @param string $typmod  The contents of the typmod field
+     * @param int    $typmod  The contents of the typmod field
      *
      * @return bool|string
      */
@@ -27,29 +27,33 @@ trait TypeTrait
 
         // If the first character is an underscore, it's an array type
         $is_array = false;
-        if (substr($typname, 0, 1) == '_') {
+
+        if ('_' === \mb_substr($typname, 0, 1)) {
             $is_array = true;
-            $typname  = substr($typname, 1);
+            $typname = \mb_substr($typname, 1);
         }
 
         // Show lengths on bpchar and varchar
-        if ($typname == 'bpchar') {
-            $len  = $typmod - $varhdrsz;
+        if ('bpchar' === $typname) {
+            $len = $typmod - $varhdrsz;
             $temp = 'character';
-            if ($len > 1) {
+
+            if (1 < $len) {
                 $temp .= "({$len})";
             }
-        } elseif ($typname == 'varchar') {
+        } elseif ('varchar' === $typname) {
             $temp = 'character varying';
-            if ($typmod != -1) {
-                $temp .= '('.($typmod - $varhdrsz).')';
+
+            if (-1 !== $typmod) {
+                $temp .= '(' . ($typmod - $varhdrsz) . ')';
             }
-        } elseif ($typname == 'numeric') {
+        } elseif ('numeric' === $typname) {
             $temp = 'numeric';
-            if ($typmod != -1) {
+
+            if (-1 !== $typmod) {
                 $tmp_typmod = $typmod - $varhdrsz;
-                $precision  = ($tmp_typmod >> 16) & 0xffff;
-                $scale      = $tmp_typmod & 0xffff;
+                $precision = ($tmp_typmod >> 16) & 0xffff;
+                $scale = $tmp_typmod & 0xffff;
                 $temp .= "({$precision}, {$scale})";
             }
         } else {
@@ -69,7 +73,7 @@ trait TypeTrait
      *
      * @param string $typname The name of the view to retrieve
      *
-     * @return \PHPPgAdmin\ADORecordSet type info
+     * @return \ADORecordSet|int
      */
     public function getType($typname)
     {
@@ -88,7 +92,7 @@ trait TypeTrait
      * @param bool $tabletypes If true, will include table types
      * @param bool $domains    If true, will include domains
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return \ADORecordSet|int
      */
     public function getTypes($all = false, $tabletypes = false, $domains = false)
     {
@@ -104,6 +108,7 @@ trait TypeTrait
 
         // Create type filter
         $tqry = "'c'";
+
         if ($tabletypes) {
             $tqry .= ", 'r', 'v'";
         }
@@ -145,7 +150,7 @@ trait TypeTrait
      * @param string $typalign
      * @param string $typstorage
      *
-     * @return int 0 if operation was successful
+     * @return \ADORecordSet|int
      *
      * @internal param $ ...
      */
@@ -172,15 +177,16 @@ trait TypeTrait
                 INPUT = \"{$typin}\",
                 OUTPUT = \"{$typout}\",
                 INTERNALLENGTH = {$typlen}";
-        if ($typdef != '') {
+
+        if ('' !== $typdef) {
             $sql .= ", DEFAULT = {$typdef}";
         }
 
-        if ($typelem != '') {
+        if ('' !== $typelem) {
             $sql .= ", ELEMENT = {$typelem}";
         }
 
-        if ($typdelim != '') {
+        if ('' !== $typdelim) {
             $sql .= ", DELIMITER = {$typdelim}";
         }
 
@@ -188,11 +194,11 @@ trait TypeTrait
             $sql .= ', PASSEDBYVALUE, ';
         }
 
-        if ($typalign != '') {
+        if ('' !== $typalign) {
             $sql .= ", ALIGNMENT = {$typalign}";
         }
 
-        if ($typstorage != '') {
+        if ('' !== $typstorage) {
             $sql .= ", STORAGE = {$typstorage}";
         }
 
@@ -207,7 +213,7 @@ trait TypeTrait
      * @param string $typname The name of the type to drop
      * @param bool   $cascade True to cascade drop, false to restrict
      *
-     * @return int 0 if operation was successful
+     * @return \ADORecordSet|int
      */
     public function dropType($typname, $cascade)
     {
@@ -216,6 +222,7 @@ trait TypeTrait
         $this->fieldClean($typname);
 
         $sql = "DROP TYPE \"{$f_schema}\".\"{$typname}\"";
+
         if ($cascade) {
             $sql .= ' CASCADE';
         }
@@ -243,31 +250,34 @@ trait TypeTrait
         }
 
         $status = $this->beginTransaction();
-        if ($status != 0) {
+
+        if (0 !== $status) {
             return -1;
         }
 
-        $values = array_unique($values);
+        $values = \array_unique($values);
 
-        $nbval = count($values);
+        $nbval = \count($values);
 
         for ($i = 0; $i < $nbval; ++$i) {
             $this->clean($values[$i]);
         }
 
         $sql = "CREATE TYPE \"{$f_schema}\".\"{$name}\" AS ENUM ('";
-        $sql .= implode("','", $values);
+        $sql .= \implode("','", $values);
         $sql .= "')";
 
         $status = $this->execute($sql);
+
         if ($status) {
             $this->rollbackTransaction();
 
             return -1;
         }
 
-        if ($typcomment != '') {
+        if ('' !== $typcomment) {
             $status = $this->setComment('TYPE', $name, '', $typcomment, true);
+
             if ($status) {
                 $this->rollbackTransaction();
 
@@ -283,7 +293,7 @@ trait TypeTrait
      *
      * @param string $name
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return \ADORecordSet|int
      */
     public function getEnumValues($name)
     {
@@ -319,14 +329,16 @@ trait TypeTrait
         $this->fieldClean($name);
 
         $status = $this->beginTransaction();
-        if ($status != 0) {
+
+        if (0 !== $status) {
             return -1;
         }
 
-        $found       = false;
-        $first       = true;
+        $found = false;
+        $first = true;
         $comment_sql = ''; // Accumulate comments for the columns
-        $sql         = "CREATE TYPE \"{$f_schema}\".\"{$name}\" AS (";
+        $sql = "CREATE TYPE \"{$f_schema}\".\"{$name}\" AS (";
+
         for ($i = 0; $i < $fields; ++$i) {
             $this->fieldClean($field[$i]);
             $this->clean($type[$i]);
@@ -334,7 +346,7 @@ trait TypeTrait
             $this->clean($colcomment[$i]);
 
             // Skip blank columns - for user convenience
-            if ($field[$i] == '' || $type[$i] == '') {
+            if ('' === $field[$i] || '' === $type[$i]) {
                 continue;
             }
 
@@ -350,9 +362,10 @@ trait TypeTrait
                 // time zone types
                 case 'timestamp with time zone':
                 case 'timestamp without time zone':
-                    $qual = substr($type[$i], 9);
+                    $qual = \mb_substr($type[$i], 9);
                     $sql .= "\"{$field[$i]}\" timestamp";
-                    if ($length[$i] != '') {
+
+                    if ('' !== $length[$i]) {
                         $sql .= "({$length[$i]})";
                     }
 
@@ -361,27 +374,30 @@ trait TypeTrait
                     break;
                 case 'time with time zone':
                 case 'time without time zone':
-                    $qual = substr($type[$i], 4);
+                    $qual = \mb_substr($type[$i], 4);
                     $sql .= "\"{$field[$i]}\" time";
-                    if ($length[$i] != '') {
+
+                    if ('' !== $length[$i]) {
                         $sql .= "({$length[$i]})";
                     }
 
                     $sql .= $qual;
 
                     break;
+
                 default:
                     $sql .= "\"{$field[$i]}\" {$type[$i]}";
-                    if ($length[$i] != '') {
+
+                    if ('' !== $length[$i]) {
                         $sql .= "({$length[$i]})";
                     }
             }
             // Add array qualifier if necessary
-            if ($array[$i] == '[]') {
+            if ('[]' === $array[$i]) {
                 $sql .= '[]';
             }
 
-            if ($colcomment[$i] != '') {
+            if ('' !== $colcomment[$i]) {
                 $comment_sql .= "COMMENT ON COLUMN \"{$f_schema}\".\"{$name}\".\"{$field[$i]}\" IS '{$colcomment[$i]}';\n";
             }
 
@@ -395,14 +411,16 @@ trait TypeTrait
         $sql .= ')';
 
         $status = $this->execute($sql);
+
         if ($status) {
             $this->rollbackTransaction();
 
             return -1;
         }
 
-        if ($typcomment != '') {
+        if ('' !== $typcomment) {
             $status = $this->setComment('TYPE', $name, '', $typcomment, true);
+
             if ($status) {
                 $this->rollbackTransaction();
 
@@ -410,8 +428,9 @@ trait TypeTrait
             }
         }
 
-        if ($comment_sql != '') {
+        if ('' !== $comment_sql) {
             $status = $this->execute($comment_sql);
+
             if ($status) {
                 $this->rollbackTransaction();
 
@@ -425,7 +444,7 @@ trait TypeTrait
     /**
      * Returns a list of all casts in the database.
      *
-     * @return \PHPPgAdmin\ADORecordSet All casts
+     * @return \ADORecordSet|int
      */
     public function getCasts()
     {
@@ -470,7 +489,7 @@ trait TypeTrait
     /**
      * Returns a list of all conversions in the database.
      *
-     * @return \PHPPgAdmin\ADORecordSet All conversions
+     * @return \ADORecordSet|int
      */
     public function getConversions()
     {

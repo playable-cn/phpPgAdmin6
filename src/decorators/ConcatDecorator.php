@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Decorators;
@@ -16,10 +16,11 @@ class ConcatDecorator extends Decorator
     public function value($fields)
     {
         $accum = '';
+
         foreach ($this->c as $var) {
             $accum .= Decorator::get_sanitized_value($var, $fields);
         }
 
-        return trim($accum);
+        return \trim($accum);
     }
 }

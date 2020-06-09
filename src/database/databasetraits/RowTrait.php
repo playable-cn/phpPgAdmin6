@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Database\Traits;
@@ -17,7 +17,7 @@ trait RowTrait
      * @param string $table The name of a table
      * @param array  $key   The associative array holding the key to retrieve
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function browseRow($table, $key)
     {
@@ -26,8 +26,10 @@ trait RowTrait
         $this->fieldClean($table);
 
         $sql = "SELECT * FROM \"{$f_schema}\".\"{$table}\"";
-        if (is_array($key) && sizeof($key) > 0) {
+
+        if (\is_array($key) && 0 < \count($key)) {
             $sql .= ' WHERE true';
+
             foreach ($key as $k => $v) {
                 $this->fieldClean($k);
                 $this->clean($v);
@@ -53,7 +55,8 @@ trait RowTrait
         $this->clean($table);
 
         $status = $this->beginTransaction();
-        if ($status != 0) {
+
+        if (0 !== $status) {
             return -1;
         }
 
@@ -74,9 +77,10 @@ trait RowTrait
 
         // If none, check for an OID column.  Even though OIDs can be duplicated, the edit and delete row
         // functions check that they're only modiying a single row.  Otherwise, return empty array.
-        if ($rs->recordCount() == 0) {
+        if (0 === $rs->recordCount()) {
             // Check for OID column
             $temp = [];
+
             if ($this->hasObjectID($table)) {
                 $temp = ['oid'];
             }
@@ -85,8 +89,9 @@ trait RowTrait
             return $temp;
         } // Otherwise find the names of the keys
 
-        $attnames = $this->getAttributeNames($oldtable, explode(' ', $rs->fields['indkey']));
-        if (!is_array($attnames)) {
+        $attnames = $this->getAttributeNames($oldtable, \explode(' ', $rs->fields['indkey']));
+
+        if (!\is_array($attnames)) {
             $this->rollbackTransaction();
 
             return -1;
@@ -107,37 +112,38 @@ trait RowTrait
      * @param array  $format An array of the data type (VALUE or EXPRESSION)
      * @param array  $types  An array of field types
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function insertRow($table, $fields, $values, $nulls, $format, $types)
     {
-        if (!is_array($fields) || !is_array($values) || !is_array($nulls)
-            || !is_array($format) || !is_array($types)
-            || (count($fields) != count($values))
+        if (!\is_array($fields) || !\is_array($values) || !\is_array($nulls)
+            || !\is_array($format) || !\is_array($types)
+            || (\count($fields) !== \count($values))
         ) {
             return -1;
         }
 
         // Build clause
-        if (count($values) > 0) {
+        if (0 < \count($values)) {
             // Escape all field names
-            $fields   = array_map(['\PHPPgAdmin\Database\Postgres', 'fieldClean'], $fields);
+            $fields = \array_map(['\PHPPgAdmin\Database\Postgres', 'fieldClean'], $fields);
             $f_schema = $this->_schema;
             $this->fieldClean($table);
             $this->fieldClean($f_schema);
 
             $sql = '';
+
             foreach ($values as $i => $value) {
                 // Handle NULL values
                 if (isset($nulls[$i])) {
                     $sql .= ',NULL';
                 } else {
-                    $sql .= ','.$this->formatValue($types[$i], $format[$i], $value);
+                    $sql .= ',' . $this->formatValue($types[$i], $format[$i], $value);
                 }
             }
 
-            $sql = "INSERT INTO \"{$f_schema}\".\"{$table}\" (\"".implode('","', $fields).'")
-                VALUES ('.substr($sql, 1).')';
+            $sql = "INSERT INTO \"{$f_schema}\".\"{$table}\" (\"" . \implode('","', $fields) . '")
+                VALUES (' . \mb_substr($sql, 1) . ')';
 
             return $this->execute($sql);
         }
@@ -159,44 +165,48 @@ trait RowTrait
         switch ($type) {
             case 'bool':
             case 'boolean':
-                if ($value == 't') {
+                if ('t' === $value) {
                     return 'TRUE';
                 }
 
-                if ($value == 'f') {
+                if ('f' === $value) {
                     return 'FALSE';
                 }
-                if ($value == '') {
+
+                if ('' === $value) {
                     return 'NULL';
                 }
 
                 return $value;
 
                 break;
+
             default:
                 // Checking variable fields is difficult as there might be a size
                 // attribute...
-                if (strpos($type, 'time') === 0) {
+                if (0 === \mb_strpos($type, 'time')) {
                     // Assume it's one of the time types...
-                    if ($value == '') {
+                    if ('' === $value) {
                         return "''";
                     }
 
-                    if (strcasecmp($value, 'CURRENT_TIMESTAMP') == 0
-                        || strcasecmp($value, 'CURRENT_TIME') == 0
-                        || strcasecmp($value, 'CURRENT_DATE') == 0
-                        || strcasecmp($value, 'LOCALTIME') == 0
-                        || strcasecmp($value, 'LOCALTIMESTAMP') == 0) {
+                    if (0 === \strcasecmp($value, 'CURRENT_TIMESTAMP')
+                        || 0 === \strcasecmp($value, 'CURRENT_TIME')
+                        || 0 === \strcasecmp($value, 'CURRENT_DATE')
+                        || 0 === \strcasecmp($value, 'LOCALTIME')
+                        || 0 === \strcasecmp($value, 'LOCALTIMESTAMP')) {
                         return $value;
                     }
-                    if ($format == 'EXPRESSION') {
+
+                    if ('EXPRESSION' === $format) {
                         return $value;
                     }
                     $this->clean($value);
 
                     return "'{$value}'";
                 }
-                if ($format == 'VALUE') {
+
+                if ('VALUE' === $format) {
                     $this->clean($value);
 
                     return "'{$value}'";
@@ -222,7 +232,7 @@ trait RowTrait
      */
     public function editRow($table, $vars, $nulls, $format, $types, $keyarr)
     {
-        if (!is_array($vars) || !is_array($nulls) || !is_array($format) || !is_array($types)) {
+        if (!\is_array($vars) || !\is_array($nulls) || !\is_array($format) || !\is_array($types)) {
             return -1;
         }
 
@@ -231,7 +241,7 @@ trait RowTrait
         $this->fieldClean($table);
         $sql = '';
         // Build clause
-        if (sizeof($vars) > 0) {
+        if (0 < \count($vars)) {
             foreach ($vars as $key => $value) {
                 $this->fieldClean($key);
 
@@ -242,16 +252,18 @@ trait RowTrait
                     $tmp = $this->formatValue($types[$key], $format[$key], $value);
                 }
 
-                if (strlen($sql) > 0) {
+                if (0 < \mb_strlen($sql)) {
                     $sql .= ", \"{$key}\"={$tmp}";
                 } else {
                     $sql = "UPDATE \"{$f_schema}\".\"{$table}\" SET \"{$key}\"={$tmp}";
                 }
             }
             $first = true;
+
             foreach ($keyarr as $k => $v) {
                 $this->fieldClean($k);
                 $this->clean($v);
+
                 if ($first) {
                     $sql .= " WHERE \"{$k}\"='{$v}'";
                     $first = false;
@@ -264,20 +276,22 @@ trait RowTrait
         // Begin transaction.  We do this so that we can ensure only one row is
         // edited
         $status = $this->beginTransaction();
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return -1;
         }
         $status = $this->execute($sql);
-        if ($status != 0) {
+
+        if (0 !== $status) {
             // update failed
             $this->rollbackTransaction();
 
             return -1;
         }
 
-        if ($this->conn->Affected_Rows() != 1) {
+        if (1 !== $this->conn->Affected_Rows()) {
             // more than one row could be updated
             $this->rollbackTransaction();
 
@@ -299,25 +313,27 @@ trait RowTrait
      */
     public function deleteRow($table, $key, $schema = '')
     {
-        if (!is_array($key)) {
+        if (!\is_array($key)) {
             return -1;
         }
 
         // Begin transaction.  We do this so that we can ensure only one row is
         // deleted
         $status = $this->beginTransaction();
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return -1;
         }
 
-        if ($schema === '') {
+        if ('' === $schema) {
             $schema = $this->_schema;
         }
 
         $status = $this->delete($table, $key, $schema);
-        if ($status != 0 || $this->conn->Affected_Rows() != 1) {
+
+        if (0 !== $status || 1 !== $this->conn->Affected_Rows()) {
             $this->rollbackTransaction();
 
             return -2;

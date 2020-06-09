@@ -1,23 +1,19 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin;
 
 /**
  * @file
- * Extends ADONewConnection to let correct inference on PHPDoc params
- *
- * @package PHPPgAdmin
+ * Extends \ADODB_postgres9 to let correct inference on PHPDoc params
  */
 
 /**
- * Extends ADONewConnection to let correct inference on PHPDoc params.
- *
- * @package PHPPgAdmin
+ * Extends \ADODB_postgres9 to let correct inference on PHPDoc params.
  */
-class ADONewConnection extends \ADONewConnection
+class ADONewConnection extends \ADODB_postgres9
 {
 }

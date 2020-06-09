@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * PHPPgAdmin 6.0.0
+ */
+
 namespace PHPPgAdmin\Middleware;
 
 /**
@@ -11,38 +15,44 @@ class PopulateRequestResponse extends Middleware
     use \PHPPgAdmin\Traits\HelperTrait;
 
     public function __invoke(
-        \Psr\Http\Message\ServerRequestInterface $request,
-        \Psr\Http\Message\ResponseInterface $response,
+        \Slim\Http\Request $request,
+        \Slim\Http\Response $response,
         $next
     ) {
-        $container                = $this->container;
-        $container['requestobj']  = $request;
+        $container = $this->container;
+        $subfolder = $this->getSubfolder();
+        $container['requestobj'] = $request;
         $container['responseobj'] = $response;
+        $route = $request->getAttribute('route');
 
-        $container['server']   = $request->getParam('server');
+        $container['server'] = $request->getParam('server');
         $container['database'] = $request->getParam('database');
-        $container['schema']   = $request->getParam('schema');
-        $misc                  = $container->get('misc');
+        $container['schema'] = $request->getParam('schema');
+        $misc = $container->get('misc');
+        $view = $container->get('view');
 
         $misc->setHREF();
-        $misc->setForm();
+        $view->setForm();
 
-        $container->view->offsetSet('METHOD', $request->getMethod());
-        if ($request->getAttribute('route')) {
-            $container->view->offsetSet('subject', $request->getAttribute('route')->getArgument('subject'));
+        $view->offsetSet('METHOD', $request->getMethod());
+
+        if ($route) {
+            $view->offsetSet('subject', $route->getArgument('subject'));
+            $container['server'] = $route->getArgument('server', $request->getParam('server'));
         }
 
         $query_string = $request->getUri()->getQuery();
-        $container->view->offsetSet('query_string', $query_string);
-        $path = (SUBFOLDER ? (SUBFOLDER . '/') : '') . $request->getUri()->getPath() . ($query_string ? '?' . $query_string : '');
-        $container->view->offsetSet('path', $path);
+        $view->offsetSet('query_string', $query_string);
+        $path = ($subfolder ? ($subfolder . '/') : '')
+        . $request->getUri()->getPath() . ($query_string ? '?' . $query_string : '');
+        $view->offsetSet('path', $path);
 
         $params = $request->getParams();
 
         $viewparams = [];
 
         foreach ($params as $key => $value) {
-            if (is_scalar($value)) {
+            if (\is_scalar($value)) {
                 $viewparams[$key] = $value;
             }
         }
@@ -55,20 +65,13 @@ class PopulateRequestResponse extends Middleware
 
         // remove tabs and linebreaks from query
         if (isset($params['query'])) {
-            $viewparams['query'] = str_replace(["\r", "\n", "\t"], ' ', $params['query']);
+            $viewparams['query'] = \str_replace(["\r", "\n", "\t"], ' ', $params['query']);
         }
-        $container->view->offsetSet('params', $viewparams);
-        $container->view->offsetSet('in_test', $in_test);
+        $view->offsetSet('params', $viewparams);
+        $view->offsetSet('in_test', $in_test);
 
-        if (count($container['errors']) > 0) {
+        if (0 < \count($container['errors'])) {
             return ($container->haltHandler)($container->requestobj, $container->responseobj, $container['errors'], 412);
-        }
-
-        $messages = $container->flash->getMessages();
-        if (!empty($messages)) {
-            foreach ($messages as $key => $message) {
-                //$this->prtrace('Flash: ' . $key . ' =  ' . json_encode($message));
-            }
         }
 
         // First execute anything else

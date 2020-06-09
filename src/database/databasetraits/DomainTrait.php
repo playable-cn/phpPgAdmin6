@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Database\Traits;
@@ -16,7 +16,7 @@ trait DomainTrait
      *
      * @param string $domain The name of the domain to fetch
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getDomain($domain)
     {
@@ -46,7 +46,7 @@ trait DomainTrait
     /**
      * Return all domains in current schema.  Excludes domain constraints.
      *
-     * @return \PHPPgAdmin\ADORecordSet All tables, sorted alphabetically
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getDomains()
     {
@@ -77,7 +77,7 @@ trait DomainTrait
      *
      * @param string $domain The name of the domain whose constraints to fetch
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getDomainConstraints($domain)
     {
@@ -116,7 +116,7 @@ trait DomainTrait
      * @param string $default Default value for domain
      * @param string $check   A CHECK constraint if there is one
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function createDomain($domain, $type, $length, $array, $notnull, $default, $check)
     {
@@ -126,7 +126,7 @@ trait DomainTrait
 
         $sql = "CREATE DOMAIN \"{$f_schema}\".\"{$domain}\" AS ";
 
-        if ($length == '') {
+        if ('' === $length) {
             $sql .= $type;
         } else {
             switch ($type) {
@@ -134,16 +134,17 @@ trait DomainTrait
                 // time zone types
                 case 'timestamp with time zone':
                 case 'timestamp without time zone':
-                    $qual = substr($type, 9);
+                    $qual = \mb_substr($type, 9);
                     $sql .= "timestamp({$length}){$qual}";
 
                     break;
                 case 'time with time zone':
                 case 'time without time zone':
-                    $qual = substr($type, 4);
+                    $qual = \mb_substr($type, 4);
                     $sql .= "time({$length}){$qual}";
 
                     break;
+
                 default:
                     $sql .= "{$type}({$length})";
             }
@@ -158,11 +159,11 @@ trait DomainTrait
             $sql .= ' NOT NULL';
         }
 
-        if ($default != '') {
+        if ('' !== $default) {
             $sql .= " DEFAULT {$default}";
         }
 
-        if ($this->hasDomainConstraints() && $check != '') {
+        if ($this->hasDomainConstraints() && '' !== $check) {
             $sql .= " CHECK ({$check})";
         }
 
@@ -187,21 +188,23 @@ trait DomainTrait
         $this->fieldClean($domowner);
 
         $status = $this->beginTransaction();
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return -1;
         }
 
         // Default
-        if ($domdefault == '') {
+        if ('' === $domdefault) {
             $sql = "ALTER DOMAIN \"{$f_schema}\".\"{$domain}\" DROP DEFAULT";
         } else {
             $sql = "ALTER DOMAIN \"{$f_schema}\".\"{$domain}\" SET DEFAULT {$domdefault}";
         }
 
         $status = $this->execute($sql);
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return -2;
@@ -215,7 +218,8 @@ trait DomainTrait
         }
 
         $status = $this->execute($sql);
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return -3;
@@ -225,7 +229,8 @@ trait DomainTrait
         $sql = "ALTER DOMAIN \"{$f_schema}\".\"{$domain}\" OWNER TO \"{$domowner}\"";
 
         $status = $this->execute($sql);
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return -4;
@@ -240,7 +245,7 @@ trait DomainTrait
      * @param string $domain  The name of the domain to drop
      * @param string $cascade True to cascade drop, false to restrict
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function dropDomain($domain, $cascade)
     {
@@ -249,6 +254,7 @@ trait DomainTrait
         $this->fieldClean($domain);
 
         $sql = "DROP DOMAIN \"{$f_schema}\".\"{$domain}\"";
+
         if ($cascade) {
             $sql .= ' CASCADE';
         }
@@ -263,7 +269,7 @@ trait DomainTrait
      * @param string $definition The definition of the check
      * @param string $name       (optional) The name to give the check, otherwise default name is assigned
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function addDomainCheckConstraint($domain, $definition, $name = '')
     {
@@ -273,7 +279,8 @@ trait DomainTrait
         $this->fieldClean($name);
 
         $sql = "ALTER DOMAIN \"{$f_schema}\".\"{$domain}\" ADD ";
-        if ($name != '') {
+
+        if ('' !== $name) {
             $sql .= "CONSTRAINT \"{$name}\" ";
         }
 
@@ -289,7 +296,7 @@ trait DomainTrait
      * @param string $constraint The constraint to remove
      * @param bool   $cascade    True to cascade, false otherwise
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function dropDomainConstraint($domain, $constraint, $cascade)
     {
@@ -299,6 +306,7 @@ trait DomainTrait
         $this->fieldClean($constraint);
 
         $sql = "ALTER DOMAIN \"{$f_schema}\".\"{$domain}\" DROP CONSTRAINT \"{$constraint}\"";
+
         if ($cascade) {
             $sql .= ' CASCADE';
         }

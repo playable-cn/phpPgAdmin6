@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Controller;
@@ -10,8 +10,6 @@ use PHPPgAdmin\Decorators\Decorator;
 
 /**
  * Base controller class.
- *
- * @package PHPPgAdmin
  */
 class LanguagesController extends BaseController
 {
@@ -22,7 +20,7 @@ class LanguagesController extends BaseController
      */
     public function render()
     {
-        if ('tree' == $this->action) {
+        if ('tree' === $this->action) {
             return $this->doTree();
         }
 
@@ -44,7 +42,7 @@ class LanguagesController extends BaseController
      *
      * @param mixed $msg
      */
-    public function doDefault($msg = '')
+    public function doDefault($msg = ''): void
     {
         $data = $this->misc->getDatabaseAccessor();
 
@@ -59,10 +57,10 @@ class LanguagesController extends BaseController
                 'title' => $this->lang['strname'],
                 'field' => Decorator::field('lanname'),
             ],
-            'trusted'  => [
+            'trusted' => [
                 'title' => $this->lang['strtrusted'],
                 'field' => Decorator::field('lanpltrusted'),
-                'type'  => 'yesno',
+                'type' => 'yesno',
             ],
             'function' => [
                 'title' => $this->lang['strfunction'],

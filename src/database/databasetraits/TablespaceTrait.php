@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Database\Traits;
@@ -16,7 +16,7 @@ trait TablespaceTrait
      *
      * @param bool $all Include all tablespaces (necessary when moving objects back to the default space)
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getTablespaces($all = false)
     {
@@ -42,7 +42,7 @@ trait TablespaceTrait
      *
      * @param string $spcname
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getTablespace($spcname)
     {
@@ -72,7 +72,7 @@ trait TablespaceTrait
 
         $sql = "CREATE TABLESPACE \"{$spcname}\"";
 
-        if ($spcowner != '') {
+        if ('' !== $spcowner) {
             $this->fieldClean($spcowner);
             $sql .= " OWNER \"{$spcowner}\"";
         }
@@ -80,13 +80,15 @@ trait TablespaceTrait
         $sql .= " LOCATION '{$spcloc}'";
 
         $status = $this->execute($sql);
-        if ($status != 0) {
+
+        if (0 !== $status) {
             return -1;
         }
 
-        if ($comment != '' && $this->hasSharedComments()) {
+        if ('' !== $comment && $this->hasSharedComments()) {
             $status = $this->setComment('TABLESPACE', $spcname, '', $comment);
-            if ($status != 0) {
+
+            if (0 !== $status) {
                 return -2;
             }
         }
@@ -112,24 +114,27 @@ trait TablespaceTrait
 
         // Begin transaction
         $status = $this->beginTransaction();
-        if ($status != 0) {
+
+        if (0 !== $status) {
             return -1;
         }
 
         // Owner
-        $sql    = "ALTER TABLESPACE \"{$spcname}\" OWNER TO \"{$owner}\"";
+        $sql = "ALTER TABLESPACE \"{$spcname}\" OWNER TO \"{$owner}\"";
         $status = $this->execute($sql);
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return -2;
         }
 
         // Rename (only if name has changed)
-        if ($name != $spcname) {
-            $sql    = "ALTER TABLESPACE \"{$spcname}\" RENAME TO \"{$name}\"";
+        if ($name !== $spcname) {
+            $sql = "ALTER TABLESPACE \"{$spcname}\" RENAME TO \"{$name}\"";
             $status = $this->execute($sql);
-            if ($status != 0) {
+
+            if (0 !== $status) {
                 $this->rollbackTransaction();
 
                 return -3;
@@ -139,9 +144,10 @@ trait TablespaceTrait
         }
 
         // Set comment if it has changed
-        if (trim($comment) != '' && $this->hasSharedComments()) {
+        if ('' !== \trim($comment) && $this->hasSharedComments()) {
             $status = $this->setComment('TABLESPACE', $spcname, '', $comment);
-            if ($status != 0) {
+
+            if (0 !== $status) {
                 return -4;
             }
         }
@@ -154,7 +160,7 @@ trait TablespaceTrait
      *
      * @param string $spcname The name of the domain to drop
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function dropTablespace($spcname)
     {

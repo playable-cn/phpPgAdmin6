@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Database\Traits;
@@ -17,7 +17,7 @@ trait TriggerTrait
      * @param string $table   The name of a table whose triggers to retrieve
      * @param string $trigger The name of the trigger to retrieve
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getTrigger($table, $trigger)
     {
@@ -47,7 +47,7 @@ trait TriggerTrait
      * @param string $tgfrequency
      * @param string $tgargs      The function arguments
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function createTrigger($tgname, $table, $tgproc, $tgtime, $tgevent, $tgfrequency, $tgargs)
     {
@@ -72,7 +72,7 @@ trait TriggerTrait
      * @param string $trigger The name of the trigger to alter
      * @param string $name    The new name for the trigger
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function alterTrigger($table, $trigger, $name)
     {
@@ -94,7 +94,7 @@ trait TriggerTrait
      * @param string $table   The table from which to drop the trigger
      * @param bool   $cascade True to cascade drop, false to restrict
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function dropTrigger($tgname, $table, $cascade)
     {
@@ -104,6 +104,7 @@ trait TriggerTrait
         $this->fieldClean($table);
 
         $sql = "DROP TRIGGER \"{$tgname}\" ON \"{$f_schema}\".\"{$table}\"";
+
         if ($cascade) {
             $sql .= ' CASCADE';
         }
@@ -117,7 +118,7 @@ trait TriggerTrait
      * @param string $tgname The name of the trigger to enable
      * @param string $table  The table in which to enable the trigger
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function enableTrigger($tgname, $table)
     {
@@ -137,7 +138,7 @@ trait TriggerTrait
      * @param string $tgname The name of the trigger to disable
      * @param string $table  The table in which to disable the trigger
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function disableTrigger($tgname, $table)
     {
@@ -188,7 +189,7 @@ trait TriggerTrait
      * @param bool   $replace (optional) True to replace existing rule, false
      *                        otherwise
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function createRule($name, $event, $table, $where, $instead, $type, $action, $replace = false)
     {
@@ -196,27 +197,30 @@ trait TriggerTrait
         $this->fieldClean($f_schema);
         $this->fieldClean($name);
         $this->fieldClean($table);
-        if (!in_array($event, $this->rule_events, true)) {
+
+        if (!\in_array($event, $this->rule_events, true)) {
             return -1;
         }
 
         $sql = 'CREATE';
+
         if ($replace) {
             $sql .= ' OR REPLACE';
         }
 
         $sql .= " RULE \"{$name}\" AS ON {$event} TO \"{$f_schema}\".\"{$table}\"";
         // Can't escape WHERE clause
-        if ($where != '') {
+        if ('' !== $where) {
             $sql .= " WHERE {$where}";
         }
 
         $sql .= ' DO';
+
         if ($instead) {
             $sql .= ' INSTEAD';
         }
 
-        if ($type == 'NOTHING') {
+        if ('NOTHING' === $type) {
             $sql .= ' NOTHING';
         } else {
             $sql .= " ({$action})";
@@ -232,7 +236,7 @@ trait TriggerTrait
      * @param string $relation The relation from which to drop
      * @param string $cascade  True to cascade drop, false to restrict
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function dropRule($rule, $relation, $cascade)
     {
@@ -242,6 +246,7 @@ trait TriggerTrait
         $this->fieldClean($relation);
 
         $sql = "DROP RULE \"{$rule}\" ON \"{$f_schema}\".\"{$relation}\"";
+
         if ($cascade) {
             $sql .= ' CASCADE';
         }

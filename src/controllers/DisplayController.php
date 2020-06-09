@@ -1,15 +1,13 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Controller;
 
 /**
  * Base controller class.
- *
- * @package PHPPgAdmin
  */
 class DisplayController extends BaseController
 {
@@ -20,31 +18,32 @@ class DisplayController extends BaseController
      */
     public function render()
     {
-        $this->misc     = $this->misc;
-        $plugin_manager = $this->plugin_manager;
+        $this->misc = $this->misc;
 
-        if ('dobrowsefk' == $this->action) {
+        if ('dobrowsefk' === $this->action) {
             return $this->doBrowseFK();
         }
 
-        set_time_limit(0);
+        \set_time_limit(0);
 
-        $scripts = '<script src="'.\SUBFOLDER.'/assets/js/display.js" type="text/javascript"></script>';
+        $scripts = '<script src="' . self::SUBFOLDER . '/assets/js/display.js" type="text/javascript"></script>';
 
-        $scripts .= '<script type="text/javascript">'.PHP_EOL;
+        $scripts .= '<script type="text/javascript">' . \PHP_EOL;
         $scripts .= "var Display = {\n";
-        $scripts .= "errmsg: '".str_replace("'", "\\'", $this->lang['strconnectionfail'])."'\n";
+        $scripts .= "errmsg: '" . \str_replace("'", "\\'", $this->lang['strconnectionfail']) . "'\n";
         $scripts .= "};\n";
-        $scripts .= '</script>'.PHP_EOL;
+        $scripts .= '</script>' . \PHP_EOL;
 
         $footer_template = 'footer.twig';
         $header_template = 'header.twig';
 
-        ob_start();
+        \ob_start();
+
         switch ($this->action) {
             case 'editrow':
                 $header_template = 'header_sqledit.twig';
                 $footer_template = 'footer_sqledit.twig';
+
                 if (isset($_POST['save'])) {
                     $this->doEditRow();
                 } else {
@@ -59,6 +58,7 @@ class DisplayController extends BaseController
             case 'delrow':
                 $header_template = 'header_sqledit.twig';
                 $footer_template = 'footer_sqledit.twig';
+
                 if (isset($_POST['yes'])) {
                     $this->doDelRow(false);
                 } else {
@@ -70,6 +70,7 @@ class DisplayController extends BaseController
                 $this->doDelRow(true);
 
                 break;
+
             default:
                 $header_template = 'header_sqledit.twig';
                 $footer_template = 'footer_sqledit.twig';
@@ -77,7 +78,7 @@ class DisplayController extends BaseController
 
                 break;
         }
-        $output = ob_get_clean();
+        $output = \ob_get_clean();
 
         $subject = $this->coalesceArr($_REQUEST, 'subject', 'table')['subject'];
 
@@ -85,13 +86,13 @@ class DisplayController extends BaseController
         $object = $this->setIfIsset($object, $_REQUEST[$subject]);
 
         // Set the title based on the subject of the request
-        if ('table' == $subject) {
+        if ('table' === $subject) {
             $title = $this->headerTitle('strtables', '', $object);
-        } elseif ('view' == $subject) {
+        } elseif ('view' === $subject) {
             $title = $this->headerTitle('strviews', '', $object);
-        } elseif ('matview' == $subject) {
+        } elseif ('matview' === $subject) {
             $title = $this->headerTitle('strviews', 'M', $object);
-        } elseif ('column' == $subject) {
+        } elseif ('column' === $subject) {
             $title = $this->headerTitle('strcolumn', '', $object);
         } else {
             $title = $this->headerTitle('strqueryresults');
@@ -114,7 +115,7 @@ class DisplayController extends BaseController
     public function doBrowse($msg = '')
     {
         $this->misc = $this->misc;
-        $data       = $this->misc->getDatabaseAccessor();
+        $data = $this->misc->getDatabaseAccessor();
 
         // If current page is not set, default to first page
         $page = $this->coalesceArr($_REQUEST, 'page', 1)['page'];
@@ -125,22 +126,25 @@ class DisplayController extends BaseController
 
         $object = $this->coalesceArr($_REQUEST, $subject)[$subject];
 
-        if ($subject === 'column' && $object && isset($_REQUEST['f_schema'], $_REQUEST['f_table'])) {
+        if ('column' === $subject && $object && isset($_REQUEST['f_schema'], $_REQUEST['f_table'])) {
             $f_schema = $_REQUEST['f_schema'];
-            $f_table  = $_REQUEST['f_table'];
+            $f_table = $_REQUEST['f_table'];
 
             $_REQUEST['query'] = "SELECT \"{$object}\",
             count(*) AS \"count\"
             FROM \"{$f_schema}\".\"{$f_table}\"
             GROUP BY \"{$object}\" ORDER BY \"{$object}\"";
-        } elseif ($subject === 'table' && !isset($_REQUEST['query'])) {
+        } elseif ('table' === $subject && !isset($_REQUEST['query'])) {
+            $show = $this->getPostParam('show', []);
+            $values = $this->getPostParam('values', []);
+            $ops = $this->getPostParam('ops', []);
             $query = $data->getSelectSQL(
                 $_REQUEST['table'],
-                array_keys($_POST['show']),
-                $_POST['values'],
-                $_POST['ops']
+                \array_keys($show),
+                $values,
+                $ops
             );
-            $_REQUEST['query']  = $query;
+            $_REQUEST['query'] = $query;
             $_REQUEST['return'] = 'selectrows';
         }
 
@@ -149,18 +153,18 @@ class DisplayController extends BaseController
         $this->printTrail($subject);
 
         $tabsPosition = 'browse';
-        if ($subject === 'database') {
+
+        if ('database' === $subject) {
             $tabsPosition = 'sql';
-        } elseif ($subject === 'column') {
+        } elseif ('column' === $subject) {
             $tabsPosition = 'colproperties';
         }
 
         $this->printTabs($subject, $tabsPosition);
 
-        list($query, $title, $type) = $this->getQueryTitleAndType($data, $object);
-        $this->printTitle($title);
+        [$query, $title, $type] = $this->getQueryTitleAndType($data, $object);
 
-        //$this->prtrace($subject, $object, $query, $_SESSION['sqlquery']);
+        $this->printTitle($this->lang[$title]);
 
         $this->printMsg($msg);
 
@@ -177,11 +181,12 @@ class DisplayController extends BaseController
         $search_path = $this->coalesceArr($_REQUEST, 'search_path')['search_path'];
 
         // Set the schema search path
-        if (isset($search_path) && (0 != $data->setSearchPath(array_map('trim', explode(',', $search_path))))) {
+        if (isset($search_path) && (0 !== $data->setSearchPath(\array_map('trim', \explode(',', $search_path))))) {
             return;
         }
 
         try {
+            $max_pages = 0;
             // Retrieve page from query.  $max_pages is returned by reference.
             $resultset = $data->browseQuery(
                 $type,
@@ -199,8 +204,15 @@ class DisplayController extends BaseController
 
         // Build strings for GETs in array
         $_gets = [
-            'server'   => $_REQUEST['server'],
+            'server' => $_REQUEST['server'],
             'database' => $_REQUEST['database'],
+            'schema' => $_REQUEST['schema'] ?? null,
+            'query' => $_REQUEST['query'] ?? null,
+            'count' => $_REQUEST['count'] ?? null,
+            'return' => $_REQUEST['return'] ?? null,
+            'search_path' => $_REQUEST['search_path'] ?? null,
+            'table' => $_REQUEST['table'] ?? null,
+            'nohistory' => $_REQUEST['nohistory'] ?? null,
         ];
 
         $this->coalesceArr($_REQUEST, 'query');
@@ -209,38 +221,32 @@ class DisplayController extends BaseController
         $this->coalesceArr($_REQUEST, 'table');
         $this->coalesceArr($_REQUEST, 'nohistory');
 
-        $this->setIfIsset($_gets['schema'], $_REQUEST['schema'], null, false);
         $this->setIfIsset($_gets[$subject], $object, null, false);
         $this->setIfIsset($_gets['subject'], $subject, null, false);
-        $this->setIfIsset($_gets['query'], $_REQUEST['query'], null, false);
-        $this->setIfIsset($_gets['count'], $_REQUEST['count'], null, false);
-        $this->setIfIsset($_gets['return'], $_REQUEST['return'], null, false);
-        $this->setIfIsset($_gets['search_path'], $_REQUEST['search_path'], null, false);
-        $this->setIfIsset($_gets['table'], $_REQUEST['table'], null, false);
-        $this->setIfIsset($_gets['nohistory'], $_REQUEST['nohistory'], null, false);
+
         $_gets['sortkey'] = $sortkey;
         $_gets['sortdir'] = $sortdir;
         $_gets['strings'] = $strings;
 
-        if ($save_history && is_object($resultset) && ('QUERY' == $type)) {
+        if ($save_history && \is_object($resultset) && ('QUERY' === $type)) {
             //{
             $this->misc->saveScriptHistory($_REQUEST['query']);
         }
 
-        $query = $query ? $query : sprintf('SELECT * FROM %s.%s', $_REQUEST['schema'], $object);
+        $query = $query ? $query : \sprintf('SELECT * FROM %s.%s', $_REQUEST['schema'], $object);
 
         //$query = isset($_REQUEST['query'])? $_REQUEST['query'] : "select * from {$_REQUEST['schema']}.{$_REQUEST['table']};";
-        //$this->prtrace($query);
 
         //die(htmlspecialchars($query));
 
-        echo '<form method="post" id="sqlform" action="'.$_SERVER['REQUEST_URI'].'">';
+        echo '<form method="post" id="sqlform" action="' . $_SERVER['REQUEST_URI'] . '">';
         echo $this->misc->form;
+
         if ($object) {
-            echo '<input type="hidden" name="'.$subject.'" value="', htmlspecialchars($object), '" />'.PHP_EOL;
+            echo '<input type="hidden" name="' . $subject . '" value="', \htmlspecialchars($object), '" />' . \PHP_EOL;
         }
         echo '<textarea width="90%" name="query"  id="query" rows="5" cols="100" resizable="true">';
-        echo htmlspecialchars($query);
+        echo \htmlspecialchars($query);
         echo '</textarea><br><input type="submit"/>';
 
         echo '</form>';
@@ -249,7 +255,7 @@ class DisplayController extends BaseController
         // Navigation links
 
         $navlinks = $this->getBrowseNavLinks($type, $_gets, $page, $subject, $object, $resultset);
-        $this->printNavLinks($navlinks, 'display-browse', get_defined_vars());
+        $this->printNavLinks($navlinks, 'display-browse', \get_defined_vars());
     }
 
     public function getQueryTitleAndType($data, $object)
@@ -260,23 +266,24 @@ class DisplayController extends BaseController
         // This code is used when browsing FK in pure-xHTML (without js)
         if ($fkey) {
             $ops = [];
-            foreach (array_keys($fkey) as $x) {
+
+            foreach (\array_keys($fkey) as $x) {
                 $ops[$x] = '=';
             }
-            $query             = $data->getSelectSQL($_REQUEST['table'], [], $fkey, $ops);
+            $query = $data->getSelectSQL($_REQUEST['table'], [], $fkey, $ops);
             $_REQUEST['query'] = $query;
         }
 
         $title = 'strqueryresults';
-        $type  = 'QUERY';
+        $type = 'QUERY';
 
         if ($object && $query) {
             $_SESSION['sqlquery'] = $query;
-            $title                = 'strselect';
-            $type                 = 'SELECT';
+            $title = 'strselect';
+            $type = 'SELECT';
         } elseif ($object) {
             $title = 'strselect';
-            $type  = 'TABLE';
+            $type = 'TABLE';
         } elseif (isset($_SESSION['sqlquery'])) {
             $query = $_SESSION['sqlquery'];
         }
@@ -284,25 +291,33 @@ class DisplayController extends BaseController
         return [$query, $title, $type];
     }
 
-    public function getBrowseNavLinks($type, $_gets, $page, $subject, $object, $resultset)
+    /**
+     * @param array  $_gets
+     * @param mixed  $type
+     * @param mixed  $page
+     * @param string $subject
+     * @param mixed  $object
+     * @param mixed  $resultset
+     */
+    public function getBrowseNavLinks($type, array $_gets, $page, string $subject, $object, $resultset)
     {
         $fields = [
-            'server'   => $_REQUEST['server'],
+            'server' => $_REQUEST['server'],
             'database' => $_REQUEST['database'],
         ];
 
         $this->setIfIsset($fields['schema'], $_REQUEST['schema'], null, false);
 
         $navlinks = [];
-        $strings  = $_gets['strings'];
+        $strings = $_gets['strings'];
         // Return
         if (isset($_REQUEST['return'])) {
             $urlvars = $this->misc->getSubjectParams($_REQUEST['return']);
 
             $navlinks['back'] = [
-                'attr'    => [
+                'attr' => [
                     'href' => [
-                        'url'     => $urlvars['url'],
+                        'url' => $urlvars['url'],
                         'urlvars' => $urlvars['params'],
                     ],
                 ],
@@ -311,15 +326,15 @@ class DisplayController extends BaseController
         }
 
         // Edit SQL link
-        if ('QUERY' == $type) {
+        if ('QUERY' === $type) {
             $navlinks['edit'] = [
-                'attr'    => [
+                'attr' => [
                     'href' => [
-                        'url'     => 'database',
-                        'urlvars' => array_merge(
+                        'url' => 'database',
+                        'urlvars' => \array_merge(
                             $fields,
                             [
-                                'action'   => 'sql',
+                                'action' => 'sql',
                                 'paginate' => 'on',
                             ]
                         ),
@@ -330,14 +345,14 @@ class DisplayController extends BaseController
         }
 
         $navlinks['collapse'] = [
-            'attr'    => [
+            'attr' => [
                 'href' => [
-                    'url'     => 'display',
-                    'urlvars' => array_merge(
+                    'url' => 'display',
+                    'urlvars' => \array_merge(
                         $_gets,
                         [
                             'strings' => 'expanded',
-                            'page'    => $page,
+                            'page' => $page,
                         ]
                     ),
                 ],
@@ -345,16 +360,16 @@ class DisplayController extends BaseController
             'content' => $this->lang['strexpand'],
         ];
         // Expand/Collapse
-        if ('expanded' == $strings) {
+        if ('expanded' === $strings) {
             $navlinks['collapse'] = [
-                'attr'    => [
+                'attr' => [
                     'href' => [
-                        'url'     => 'display',
-                        'urlvars' => array_merge(
+                        'url' => 'display',
+                        'urlvars' => \array_merge(
                             $_gets,
                             [
                                 'strings' => 'collapsed',
-                                'page'    => $page,
+                                'page' => $page,
                             ]
                         ),
                     ],
@@ -364,17 +379,17 @@ class DisplayController extends BaseController
         }
 
         // Create view and download
-        if (isset($_REQUEST['query'], $resultset) && is_object($resultset) && $resultset->recordCount() > 0) {
+        if (isset($_REQUEST['query'], $resultset) && \is_object($resultset) && 0 < $resultset->recordCount()) {
             // Report views don't set a schema, so we need to disable create view in that case
             if (isset($_REQUEST['schema'])) {
                 $navlinks['createview'] = [
-                    'attr'    => [
+                    'attr' => [
                         'href' => [
-                            'url'     => 'views',
-                            'urlvars' => array_merge(
+                            'url' => 'views',
+                            'urlvars' => \array_merge(
                                 $fields,
                                 [
-                                    'action'         => 'create',
+                                    'action' => 'create',
                                     'formDefinition' => $_REQUEST['query'],
                                 ]
                             ),
@@ -389,10 +404,10 @@ class DisplayController extends BaseController
             $this->setIfIsset($urlvars['search_path'], $_REQUEST['search_path'], null, false);
 
             $navlinks['download'] = [
-                'attr'    => [
+                'attr' => [
                     'href' => [
-                        'url'     => 'dataexport',
-                        'urlvars' => array_merge($fields, $urlvars),
+                        'url' => 'dataexport',
+                        'urlvars' => \array_merge($fields, $urlvars),
                     ],
                 ],
                 'content' => $this->lang['strdownload'],
@@ -400,16 +415,16 @@ class DisplayController extends BaseController
         }
 
         // Insert
-        if (isset($object) && (isset($subject) && 'table' == $subject)) {
+        if (isset($object) && (isset($subject) && 'table' === $subject)) {
             $navlinks['insert'] = [
-                'attr'    => [
+                'attr' => [
                     'href' => [
-                        'url'     => 'tables',
-                        'urlvars' => array_merge(
+                        'url' => 'tables',
+                        'urlvars' => \array_merge(
                             $fields,
                             [
                                 'action' => 'confinsertrow',
-                                'table'  => $object,
+                                'table' => $object,
                             ]
                         ),
                     ],
@@ -420,14 +435,14 @@ class DisplayController extends BaseController
 
         // Refresh
         $navlinks['refresh'] = [
-            'attr'    => [
+            'attr' => [
                 'href' => [
-                    'url'     => 'display',
-                    'urlvars' => array_merge(
+                    'url' => 'display',
+                    'urlvars' => \array_merge(
                         $_gets,
                         [
                             'strings' => $strings,
-                            'page'    => $page,
+                            'page' => $page,
                         ]
                     ),
                 ],
@@ -438,236 +453,129 @@ class DisplayController extends BaseController
         return $navlinks;
     }
 
-    private function _getKeyAndActions($resultset, $object, $data, $page, $_gets)
+    /**
+     * @param array $_gets
+     * @param mixed $resultset
+     * @param mixed $page
+     * @param mixed $max_pages
+     * @param mixed $object
+     */
+    public function printResultsTable($resultset, $page, $max_pages, array $_gets, $object): void
     {
-        $key            = [];
-        $strings        = $_gets['strings'];
-        $plugin_manager = $this->plugin_manager;
-        // Fetch unique row identifier, if this is a table browse request.
-        if ($object) {
-            $key = $data->getRowIdentifier($object);
-        }
-        // Check that the key is actually in the result set.  This can occur for select
-        // operations where the key fields aren't part of the select.  XXX:  We should
-        // be able to support this, somehow.
-        foreach ($key as $v) {
-            // If a key column is not found in the record set, then we
-            // can't use the key.
-            if (!array_key_exists($v, $resultset->fields)) {
-                $key = [];
-
-                break;
-            }
-        }
-
-        $buttons = [
-            'edit'   => [
-                'content' => $this->lang['stredit'],
-                'attr'    => [
-                    'href' => [
-                        'url'     => 'display',
-                        'urlvars' => array_merge(
-                            [
-                                'action'  => 'confeditrow',
-                                'strings' => $strings,
-                                'page'    => $page,
-                            ],
-                            $_gets
-                        ),
-                    ],
-                ],
-            ],
-            'delete' => [
-                'content' => $this->lang['strdelete'],
-                'attr'    => [
-                    'href' => [
-                        'url'     => 'display',
-                        'urlvars' => array_merge(
-                            [
-                                'action'  => 'confdelrow',
-                                'strings' => $strings,
-                                'page'    => $page,
-                            ],
-                            $_gets
-                        ),
-                    ],
-                ],
-            ],
-        ];
-        $actions = [
-            'actionbuttons' => &$buttons,
-            'place'         => 'display-browse',
-        ];
-        $plugin_manager->doHook('actionbuttons', $actions);
-
-        foreach (array_keys($actions['actionbuttons']) as $action) {
-            $actions['actionbuttons'][$action]['attr']['href']['urlvars'] = array_merge(
-                $actions['actionbuttons'][$action]['attr']['href']['urlvars'],
-                $_gets
-            );
-        }
-
-        return [$actions, $key];
-    }
-
-    public function printResultsTable($resultset, $page, $max_pages, $_gets, $object)
-    {
-        if (!is_object($resultset) || $resultset->recordCount() <= 0) {
-            echo "<p>{$this->lang['strnodata']}</p>".PHP_EOL;
+        if (!\is_object($resultset) || 0 >= $resultset->recordCount()) {
+            echo "<p>{$this->lang['strnodata']}</p>" . \PHP_EOL;
 
             return;
         }
 
         $data = $this->misc->getDatabaseAccessor();
 
-        list($actions, $key) = $this->_getKeyAndActions($resultset, $object, $data, $page, $_gets);
+        [$actions, $key] = $this->_getKeyAndActions($resultset, $object, $data, $page, $_gets);
 
         $fkey_information = $this->getFKInfo();
         // Show page navigation
         $paginator = $this->_printPages($page, $max_pages, $_gets);
 
         echo $paginator;
-        echo '<table id="data">'.PHP_EOL;
+        echo '<table id="data">' . \PHP_EOL;
         echo '<tr>';
 
-        // Display edit and delete actions if we have a key
-        $display_action_column = (count($actions['actionbuttons']) > 0 && count($key) > 0);
+        try {
+            // Display edit and delete actions if we have a key
+            $display_action_column = (0 < \count($actions['actionbuttons']) && 0 < \count($key));
+        } catch (\Exception $e) {
+            $display_action_column = false;
+        }
 
-        echo $display_action_column ? "<th class=\"data\">{$this->lang['stractions']}</th>".PHP_EOL : '';
+        echo $display_action_column ? "<th class=\"data\">{$this->lang['stractions']}</th>" . \PHP_EOL : '';
 
         // we show OIDs only if we are in TABLE or SELECT type browsing
         $this->printTableHeaderCells($resultset, $_gets, isset($object));
 
-        echo '</tr>'.PHP_EOL;
+        echo '</tr>' . \PHP_EOL;
 
-        reset($resultset->fields);
+        \reset($resultset->fields);
 
-        $trclass     = 'data2';
+        $trclass = 'data2';
         $buttonclass = 'opbutton2';
 
         while (!$resultset->EOF) {
-            $trclass     = ($trclass === 'data2') ? 'data1' : 'data2';
-            $buttonclass = ($buttonclass === 'opbutton2') ? 'opbutton1' : 'opbutton2';
+            $trclass = ('data2' === $trclass) ? 'data1' : 'data2';
+            $buttonclass = ('opbutton2' === $buttonclass) ? 'opbutton1' : 'opbutton2';
 
-            echo sprintf('<tr class="%s">', $trclass).PHP_EOL;
+            echo \sprintf('<tr class="%s">', $trclass) . \PHP_EOL;
 
             $this->_printResultsTableActionButtons($resultset, $key, $actions, $display_action_column, $buttonclass);
 
             $this->printTableRowCells($resultset, $fkey_information, isset($object));
 
-            echo '</tr>'.PHP_EOL;
+            echo '</tr>' . \PHP_EOL;
             $resultset->moveNext();
         }
-        echo '</table>'.PHP_EOL;
+        echo '</table>' . \PHP_EOL;
 
-        echo '<p>', $resultset->recordCount(), " {$this->lang['strrows']}</p>".PHP_EOL;
+        echo '<p>', $resultset->recordCount(), " {$this->lang['strrows']}</p>" . \PHP_EOL;
         // Show page navigation
         echo $paginator;
-    }
-
-    private function _printResultsTableActionButtons($resultset, $key, $actions, $display_action_column, $buttonclass)
-    {
-        if (!$display_action_column) {
-            return;
-        }
-
-        $edit_params   = isset($actions['actionbuttons']['edit']) ? $actions['actionbuttons']['edit'] : [];
-        $delete_params = isset($actions['actionbuttons']['delete']) ? $actions['actionbuttons']['delete'] : [];
-
-        $keys_array = [];
-        $has_nulls  = false;
-        foreach ($key as $v) {
-            if (null === $resultset->fields[$v]) {
-                $has_nulls = true;
-
-                break;
-            }
-            $keys_array["key[{$v}]"] = $resultset->fields[$v];
-        }
-        if ($has_nulls) {
-            echo '<td>&nbsp;</td>'.PHP_EOL;
-
-            return;
-        }
-        // Display edit and delete links if we have a key
-        if (isset($actions['actionbuttons']['edit'])) {
-            $actions['actionbuttons']['edit']                            = $edit_params;
-            $actions['actionbuttons']['edit']['attr']['href']['urlvars'] = array_merge(
-                $actions['actionbuttons']['edit']['attr']['href']['urlvars'],
-                $keys_array
-            );
-        }
-
-        if (isset($actions['actionbuttons']['delete'])) {
-            $actions['actionbuttons']['delete']                            = $delete_params;
-            $actions['actionbuttons']['delete']['attr']['href']['urlvars'] = array_merge(
-                $actions['actionbuttons']['delete']['attr']['href']['urlvars'],
-                $keys_array
-            );
-        }
-        echo sprintf('<td class="%s" style="white-space:nowrap">', $buttonclass);
-        foreach ($actions['actionbuttons'] as $action) {
-            $this->printLink($action, true, __METHOD__);
-        }
-        echo '</td>'.PHP_EOL;
     }
 
     /**
      * Print table header cells.
      *
-     * @param \PHPPgAdmin\ADORecordSet $resultset set of results from getRow operation
-     * @param array|bool               $args      - associative array for sort link parameters, or false if there isn't any
-     * @param bool                     $withOid   either to display OIDs or not
+     * @param \ADORecordSet $resultset set of results from getRow operation
+     * @param array|bool    $args      - associative array for sort link parameters, or false if there isn't any
+     * @param bool          $withOid   either to display OIDs or not
      */
-    public function printTableHeaderCells(&$resultset, $args, $withOid)
+    public function printTableHeaderCells(&$resultset, $args, $withOid): void
     {
         $data = $this->misc->getDatabaseAccessor();
 
-        if (!is_object($resultset) || $resultset->recordCount() <= 0) {
+        if (!\is_object($resultset) || 0 >= $resultset->recordCount()) {
             return;
         }
 
-        foreach (array_keys($resultset->fields) as $index => $key) {
+        foreach (\array_keys($resultset->fields) as $index => $key) {
             if (($key === $data->id) && (!($withOid && $this->conf['show_oids']))) {
                 continue;
             }
             $finfo = $resultset->fetchField($index);
 
             if (false === $args) {
-                echo '<th class="data">', $this->misc->printVal($finfo->name), '</th>'.PHP_EOL;
+                echo '<th class="data">', $this->misc->printVal($finfo->name), '</th>' . \PHP_EOL;
 
                 continue;
             }
-            $args['page']    = $_REQUEST['page'];
+            $args['page'] = $_REQUEST['page'];
             $args['sortkey'] = $index + 1;
             // Sort direction opposite to current direction, unless it's currently ''
-            $args['sortdir'] = ('asc' == $_REQUEST['sortdir'] && $_REQUEST['sortkey'] == ($index + 1)) ? 'desc' : 'asc';
+            $args['sortdir'] = ('asc' === $_REQUEST['sortdir'] && ($index + 1) === $_REQUEST['sortkey']) ? 'desc' : 'asc';
 
-            $sortLink = http_build_query($args);
+            $sortLink = \http_build_query($args);
 
             echo "<th class=\"data\"><a href=\"?{$sortLink}\">";
             echo $this->misc->printVal($finfo->name);
-            if ($_REQUEST['sortkey'] == ($index + 1)) {
-                $icon = ('asc' == $_REQUEST['sortdir']) ? $this->misc->icon('RaiseArgument') : $this->misc->icon('LowerArgument');
-                echo sprintf('<img src="%s" alt="%s">', $icon, $_REQUEST['sortdir']);
+
+            if (($index + 1) === $_REQUEST['sortkey']) {
+                $icon = ('asc' === $_REQUEST['sortdir']) ? $this->view->icon('RaiseArgument') : $this->view->icon('LowerArgument');
+                echo \sprintf('<img src="%s" alt="%s">', $icon, $_REQUEST['sortdir']);
             }
-            echo '</a></th>'.PHP_EOL;
+            echo '</a></th>' . \PHP_EOL;
         }
 
-        reset($resultset->fields);
+        \reset($resultset->fields);
     }
 
     /**
      * Print table rows.
      *
-     * @param \PHPPgAdmin\ADORecordSet $resultset        The resultset
-     * @param array                    $fkey_information The fkey information
-     * @param bool                     $withOid          either to display OIDs or not
+     * @param \ADORecordSet $resultset        The resultset
+     * @param array         $fkey_information The fkey information
+     * @param bool          $withOid          either to display OIDs or not
      */
-    public function printTableRowCells(&$resultset, &$fkey_information, $withOid)
+    public function printTableRowCells(&$resultset, &$fkey_information, $withOid): void
     {
         $data = $this->misc->getDatabaseAccessor();
-        $j    = 0;
+        $j = 0;
 
         $this->coalesceArr($_REQUEST, 'strings', 'collapsed');
 
@@ -677,8 +585,9 @@ class DisplayController extends BaseController
             if (($k === $data->id) && (!($withOid && $this->conf['show_oids']))) {
                 continue;
             }
-            $printvalOpts = ['null' => true, 'clip' => ('collapsed' == $_REQUEST['strings'])];
-            if (null !== $v && '' == $v) {
+            $printvalOpts = ['null' => true, 'clip' => ('collapsed' === $_REQUEST['strings'])];
+
+            if (null !== $v && '' === $v) {
                 echo '<td>&nbsp;</td>';
             } else {
                 echo '<td style="white-space:nowrap;">';
@@ -693,49 +602,12 @@ class DisplayController extends BaseController
         }
     }
 
-    private function _printFKLinks($resultset, $fkey_information, $k, $v, &$printvalOpts)
-    {
-        if ((null === $v) || !isset($fkey_information['byfield'][$k])) {
-            return;
-        }
-
-        foreach ($fkey_information['byfield'][$k] as $conid) {
-            $query_params = $fkey_information['byconstr'][$conid]['url_data'];
-
-            foreach ($fkey_information['byconstr'][$conid]['fkeys'] as $p_field => $f_field) {
-                $query_params .= '&amp;'.urlencode("fkey[{$f_field}]").'='.urlencode($resultset->fields[$p_field]);
-            }
-
-            // $fkey_information['common_url'] is already urlencoded
-            $query_params .= '&amp;'.$fkey_information['common_url'];
-            $title = htmlentities($fkey_information['byconstr'][$conid]['consrc'], ENT_QUOTES, 'UTF-8');
-            echo '<div style="display:inline-block;">';
-            echo sprintf('<a class="fk fk_%s" href="display?%s">', htmlentities($conid, ENT_QUOTES, 'UTF-8'), $query_params);
-            echo sprintf('<img src="%s" style="vertical-align:middle;" alt="[fk]" title="%s" />', $this->misc->icon('ForeignKey'), $title);
-            echo '</a>';
-            echo '</div>';
-        }
-        $printvalOpts['class'] = 'fk_value';
-    }
-
-    private function _unserializeIfNotArray($the_array, $key)
-    {
-        if (!isset($the_array[$key])) {
-            return [];
-        }
-        if (is_array($the_array[$key])) {
-            return $the_array[$key];
-        }
-
-        return unserialize(urldecode($the_array[$key]));
-    }
-
     /**
      * Show form to edit row.
      *
      * @param string $msg message to display on top of the form or after performing edition
      */
-    public function formEditRow($msg = '')
+    public function formEditRow($msg = ''): void
     {
         $data = $this->misc->getDatabaseAccessor();
 
@@ -745,56 +617,60 @@ class DisplayController extends BaseController
         $this->printTitle($this->lang['streditrow']);
         $this->printMsg($msg);
 
-        $attrs     = $data->getTableAttributes($_REQUEST['table']);
+        $attrs = $data->getTableAttributes($_REQUEST['table']);
         $resultset = $data->browseRow($_REQUEST['table'], $key);
 
         $fksprops = $this->_getFKProps();
 
-        echo '<form action="'.\SUBFOLDER.'/src/views/display" method="post" id="ac_form">'.PHP_EOL;
+        echo '<form action="' . self::SUBFOLDER . '/src/views/display" method="post" id="ac_form">' . \PHP_EOL;
 
         $elements = 0;
-        $error    = true;
-        if (1 == $resultset->recordCount() && $attrs->recordCount() > 0) {
-            echo '<table>'.PHP_EOL;
+        $error = true;
+
+        if (1 === $resultset->recordCount() && 0 < $attrs->recordCount()) {
+            echo '<table>' . \PHP_EOL;
 
             // Output table header
             echo "<tr><th class=\"data\">{$this->lang['strcolumn']}</th><th class=\"data\">{$this->lang['strtype']}</th>";
-            echo "<th class=\"data\">{$this->lang['strformat']}</th>".PHP_EOL;
+            echo "<th class=\"data\">{$this->lang['strformat']}</th>" . \PHP_EOL;
             echo "<th class=\"data\">{$this->lang['strnull']}</th><th class=\"data\">{$this->lang['strvalue']}</th></tr>";
 
             $i = 0;
+
             while (!$attrs->EOF) {
                 $attrs->fields['attnotnull'] = $data->phpBool($attrs->fields['attnotnull']);
-                $id                          = (0 == ($i % 2) ? '1' : '2');
+                $id = (0 === ($i % 2) ? '1' : '2');
 
                 // Initialise variables
                 if (!isset($_REQUEST['format'][$attrs->fields['attname']])) {
                     $_REQUEST['format'][$attrs->fields['attname']] = 'VALUE';
                 }
 
-                echo "<tr class=\"data{$id}\">".PHP_EOL;
+                echo "<tr class=\"data{$id}\">" . \PHP_EOL;
                 echo '<td style="white-space:nowrap;">', $this->misc->printVal($attrs->fields['attname']), '</td>';
-                echo '<td style="white-space:nowrap;">'.PHP_EOL;
+                echo '<td style="white-space:nowrap;">' . \PHP_EOL;
                 echo $this->misc->printVal($data->formatType($attrs->fields['type'], $attrs->fields['atttypmod']));
-                echo '<input type="hidden" name="types[', htmlspecialchars($attrs->fields['attname']), ']" value="',
-                htmlspecialchars($attrs->fields['type']), '" /></td>';
+                echo '<input type="hidden" name="types[', \htmlspecialchars($attrs->fields['attname']), ']" value="',
+                \htmlspecialchars($attrs->fields['type']), '" /></td>';
                 ++$elements;
-                echo '<td style="white-space:nowrap;">'.PHP_EOL;
-                echo '<select name="format['.htmlspecialchars($attrs->fields['attname']), ']">'.PHP_EOL;
-                echo '<option value="VALUE"', ($_REQUEST['format'][$attrs->fields['attname']] == 'VALUE') ? ' selected="selected"' : '', ">{$this->lang['strvalue']}</option>".PHP_EOL;
-                $selected = ($_REQUEST['format'][$attrs->fields['attname']] == 'EXPRESSION') ? ' selected="selected"' : '';
-                echo '<option value="EXPRESSION"'.$selected.">{$this->lang['strexpression']}</option>".PHP_EOL;
-                echo "</select>\n</td>".PHP_EOL;
+                echo '<td style="white-space:nowrap;">' . \PHP_EOL;
+                echo '<select name="format[' . \htmlspecialchars($attrs->fields['attname']), ']">' . \PHP_EOL;
+                echo '<option value="VALUE"', ($_REQUEST['format'][$attrs->fields['attname']] === 'VALUE') ? ' selected="selected"' : '', ">{$this->lang['strvalue']}</option>" . \PHP_EOL;
+                $selected = ($_REQUEST['format'][$attrs->fields['attname']] === 'EXPRESSION') ? ' selected="selected"' : '';
+                echo '<option value="EXPRESSION"' . $selected . ">{$this->lang['strexpression']}</option>" . \PHP_EOL;
+                echo "</select>\n</td>" . \PHP_EOL;
                 ++$elements;
                 echo '<td style="white-space:nowrap;">';
                 // Output null box if the column allows nulls (doesn't look at CHECKs or ASSERTIONS)
                 if (!$attrs->fields['attnotnull']) {
                     // Set initial null values
-                    if ('confeditrow' == $_REQUEST['action'] && null === $resultset->fields[$attrs->fields['attname']]) {
+                    if ('confeditrow' === $_REQUEST['action']
+                        && null === $resultset->fields[$attrs->fields['attname']]
+                    ) {
                         $_REQUEST['nulls'][$attrs->fields['attname']] = 'on';
                     }
                     echo "<label><span><input type=\"checkbox\" class=\"nullcheckbox\" name=\"nulls[{$attrs->fields['attname']}]\"",
-                    isset($_REQUEST['nulls'][$attrs->fields['attname']]) ? ' checked="checked"' : '', ' /></span></label></td>'.PHP_EOL;
+                    isset($_REQUEST['nulls'][$attrs->fields['attname']]) ? ' checked="checked"' : '', ' /></span></label></td>' . \PHP_EOL;
                     ++$elements;
                 } else {
                     echo '&nbsp;</td>';
@@ -813,7 +689,7 @@ class DisplayController extends BaseController
                 }
 
                 if ((false !== $fksprops) && isset($fksprops['byfield'][$attrs->fields['attnum']])) {
-                    $extras['id']           = "attr_{$attrs->fields['attnum']}";
+                    $extras['id'] = "attr_{$attrs->fields['attnum']}";
                     $extras['autocomplete'] = 'off';
                 }
 
@@ -821,54 +697,56 @@ class DisplayController extends BaseController
 
                 echo '</td>';
                 ++$elements;
-                echo '</tr>'.PHP_EOL;
+                echo '</tr>' . \PHP_EOL;
                 ++$i;
                 $attrs->moveNext();
             }
-            echo '</table>'.PHP_EOL;
+            echo '</table>' . \PHP_EOL;
 
             $error = false;
-        } elseif (1 != $resultset->recordCount()) {
-            echo "<p>{$this->lang['strrownotunique']}</p>".PHP_EOL;
+        } elseif (1 !== $resultset->recordCount()) {
+            echo "<p>{$this->lang['strrownotunique']}</p>" . \PHP_EOL;
         } else {
-            echo "<p>{$this->lang['strinvalidparam']}</p>".PHP_EOL;
+            echo "<p>{$this->lang['strinvalidparam']}</p>" . \PHP_EOL;
         }
 
-        echo '<input type="hidden" name="action" value="editrow" />'.PHP_EOL;
+        echo '<input type="hidden" name="action" value="editrow" />' . \PHP_EOL;
         echo $this->misc->form;
-        echo isset($_REQUEST['table']) ? sprintf('<input type="hidden" name="table" value="%s" />%s', htmlspecialchars($_REQUEST['table']), PHP_EOL) : '';
+        echo isset($_REQUEST['table']) ? \sprintf('<input type="hidden" name="table" value="%s" />%s', \htmlspecialchars($_REQUEST['table']), \PHP_EOL) : '';
 
-        echo isset($_REQUEST['subject']) ? sprintf('<input type="hidden" name="subject" value="%s" />%s', htmlspecialchars($_REQUEST['subject']), PHP_EOL) : '';
+        echo isset($_REQUEST['subject']) ? \sprintf('<input type="hidden" name="subject" value="%s" />%s', \htmlspecialchars($_REQUEST['subject']), \PHP_EOL) : '';
 
-        echo isset($_REQUEST['query']) ? sprintf('<input type="hidden" name="query" value="%s" />%s', htmlspecialchars($_REQUEST['query']), PHP_EOL) : '';
+        echo isset($_REQUEST['query']) ? \sprintf('<input type="hidden" name="query" value="%s" />%s', \htmlspecialchars($_REQUEST['query']), \PHP_EOL) : '';
 
-        echo isset($_REQUEST['count']) ? sprintf('<input type="hidden" name="count" value="%s" />%s', htmlspecialchars($_REQUEST['count']), PHP_EOL) : '';
+        echo isset($_REQUEST['count']) ? \sprintf('<input type="hidden" name="count" value="%s" />%s', \htmlspecialchars($_REQUEST['count']), \PHP_EOL) : '';
 
-        echo isset($_REQUEST['return']) ? sprintf('<input type="hidden" name="return" value="%s" />%s', htmlspecialchars($_REQUEST['return']), PHP_EOL) : '';
+        echo isset($_REQUEST['return']) ? \sprintf('<input type="hidden" name="return" value="%s" />%s', \htmlspecialchars($_REQUEST['return']), \PHP_EOL) : '';
 
-        echo '<input type="hidden" name="page" value="', htmlspecialchars($_REQUEST['page']), '" />'.PHP_EOL;
-        echo '<input type="hidden" name="sortkey" value="', htmlspecialchars($_REQUEST['sortkey']), '" />'.PHP_EOL;
-        echo '<input type="hidden" name="sortdir" value="', htmlspecialchars($_REQUEST['sortdir']), '" />'.PHP_EOL;
-        echo '<input type="hidden" name="strings" value="', htmlspecialchars($_REQUEST['strings']), '" />'.PHP_EOL;
-        echo '<input type="hidden" name="key" value="', htmlspecialchars(urlencode(serialize($key))), '" />'.PHP_EOL;
+        echo '<input type="hidden" name="page" value="', \htmlspecialchars($_REQUEST['page']), '" />' . \PHP_EOL;
+        echo '<input type="hidden" name="sortkey" value="', \htmlspecialchars($_REQUEST['sortkey']), '" />' . \PHP_EOL;
+        echo '<input type="hidden" name="sortdir" value="', \htmlspecialchars($_REQUEST['sortdir']), '" />' . \PHP_EOL;
+        echo '<input type="hidden" name="strings" value="', \htmlspecialchars($_REQUEST['strings']), '" />' . \PHP_EOL;
+        echo '<input type="hidden" name="key" value="', \htmlspecialchars(\urlencode(\serialize($key))), '" />' . \PHP_EOL;
         echo '<p>';
+
         if (!$error) {
-            echo "<input type=\"submit\" name=\"save\" accesskey=\"r\" value=\"{$this->lang['strsave']}\" />".PHP_EOL;
+            echo "<input type=\"submit\" name=\"save\" accesskey=\"r\" value=\"{$this->lang['strsave']}\" />" . \PHP_EOL;
         }
 
-        echo "<input type=\"submit\" name=\"cancel\" value=\"{$this->lang['strcancel']}\" />".PHP_EOL;
+        echo "<input type=\"submit\" name=\"cancel\" value=\"{$this->lang['strcancel']}\" />" . \PHP_EOL;
 
         if (false !== $fksprops) {
             $autocomplete_string = "<input type=\"checkbox\" id=\"no_ac\" value=\"0\" /><label for=\"no_ac\">{$this->lang['strac']}</label>";
-            if ('default off' != $this->conf['autocomplete']) {
+
+            if ('default off' !== $this->conf['autocomplete']) {
                 $autocomplete_string = "<input type=\"checkbox\" id=\"no_ac\" value=\"1\" checked=\"checked\" /><label for=\"no_ac\">{$this->lang['strac']}</label>";
             }
-            echo $autocomplete_string.PHP_EOL;
+            echo $autocomplete_string . \PHP_EOL;
         }
 
-        echo '</p>'.PHP_EOL;
-        echo '</form>'.PHP_EOL;
-        echo '<script src="'.\SUBFOLDER.'/assets/js/insert_or_edit_row.js" type="text/javascript"></script>';
+        echo '</p>' . \PHP_EOL;
+        echo '</form>' . \PHP_EOL;
+        echo '<script src="' . self::SUBFOLDER . '/assets/js/insert_or_edit_row.js" type="text/javascript"></script>';
     }
 
     /**
@@ -892,10 +770,12 @@ class DisplayController extends BaseController
             $_POST['types'],
             $key
         );
-        if (0 == $status) {
+
+        if (0 === $status) {
             return $this->doBrowse($this->lang['strrowupdated']);
         }
-        if ($status == -2) {
+
+        if (-2 === $status) {
             return $this->formEditRow($this->lang['strrownotunique']);
         }
 
@@ -907,7 +787,7 @@ class DisplayController extends BaseController
      *
      * @param mixed $confirm
      */
-    public function doDelRow($confirm)
+    public function doDelRow($confirm): void
     {
         $data = $this->misc->getDatabaseAccessor();
 
@@ -917,63 +797,65 @@ class DisplayController extends BaseController
 
             $resultset = $data->browseRow($_REQUEST['table'], $_REQUEST['key']);
 
-            echo '<form action="'.\SUBFOLDER.'/src/views/display" method="post">'.PHP_EOL;
+            echo '<form action="' . self::SUBFOLDER . '/src/views/display" method="post">' . \PHP_EOL;
             echo $this->misc->form;
 
-            if (1 == $resultset->recordCount()) {
-                echo "<p>{$this->lang['strconfdeleterow']}</p>".PHP_EOL;
+            if (1 === $resultset->recordCount()) {
+                echo "<p>{$this->lang['strconfdeleterow']}</p>" . \PHP_EOL;
 
                 $fkinfo = [];
                 echo '<table><tr>';
                 $this->printTableHeaderCells($resultset, false, true);
                 echo '</tr>';
-                echo '<tr class="data1">'.PHP_EOL;
+                echo '<tr class="data1">' . \PHP_EOL;
                 $this->printTableRowCells($resultset, $fkinfo, true);
-                echo '</tr>'.PHP_EOL;
-                echo '</table>'.PHP_EOL;
-                echo '<br />'.PHP_EOL;
+                echo '</tr>' . \PHP_EOL;
+                echo '</table>' . \PHP_EOL;
+                echo '<br />' . \PHP_EOL;
 
-                echo '<input type="hidden" name="action" value="delrow" />'.PHP_EOL;
-                echo "<input type=\"submit\" name=\"yes\" value=\"{$this->lang['stryes']}\" />".PHP_EOL;
-                echo "<input type=\"submit\" name=\"no\" value=\"{$this->lang['strno']}\" />".PHP_EOL;
-            } elseif (1 != $resultset->recordCount()) {
-                echo "<p>{$this->lang['strrownotunique']}</p>".PHP_EOL;
-                echo "<input type=\"submit\" name=\"cancel\" value=\"{$this->lang['strcancel']}\" />".PHP_EOL;
+                echo '<input type="hidden" name="action" value="delrow" />' . \PHP_EOL;
+                echo "<input type=\"submit\" name=\"yes\" value=\"{$this->lang['stryes']}\" />" . \PHP_EOL;
+                echo "<input type=\"submit\" name=\"no\" value=\"{$this->lang['strno']}\" />" . \PHP_EOL;
+            } elseif (1 !== $resultset->recordCount()) {
+                echo "<p>{$this->lang['strrownotunique']}</p>" . \PHP_EOL;
+                echo "<input type=\"submit\" name=\"cancel\" value=\"{$this->lang['strcancel']}\" />" . \PHP_EOL;
             } else {
-                echo "<p>{$this->lang['strinvalidparam']}</p>".PHP_EOL;
-                echo "<input type=\"submit\" name=\"cancel\" value=\"{$this->lang['strcancel']}\" />".PHP_EOL;
+                echo "<p>{$this->lang['strinvalidparam']}</p>" . \PHP_EOL;
+                echo "<input type=\"submit\" name=\"cancel\" value=\"{$this->lang['strcancel']}\" />" . \PHP_EOL;
             }
+
             if (isset($_REQUEST['table'])) {
-                echo '<input type="hidden" name="table" value="', htmlspecialchars($_REQUEST['table']), '" />'.PHP_EOL;
+                echo '<input type="hidden" name="table" value="', \htmlspecialchars($_REQUEST['table']), '" />' . \PHP_EOL;
             }
 
             if (isset($_REQUEST['subject'])) {
-                echo '<input type="hidden" name="subject" value="', htmlspecialchars($_REQUEST['subject']), '" />'.PHP_EOL;
+                echo '<input type="hidden" name="subject" value="', \htmlspecialchars($_REQUEST['subject']), '" />' . \PHP_EOL;
             }
 
             if (isset($_REQUEST['query'])) {
-                echo '<input type="hidden" name="query" value="', htmlspecialchars($_REQUEST['query']), '" />'.PHP_EOL;
+                echo '<input type="hidden" name="query" value="', \htmlspecialchars($_REQUEST['query']), '" />' . \PHP_EOL;
             }
 
             if (isset($_REQUEST['count'])) {
-                echo '<input type="hidden" name="count" value="', htmlspecialchars($_REQUEST['count']), '" />'.PHP_EOL;
+                echo '<input type="hidden" name="count" value="', \htmlspecialchars($_REQUEST['count']), '" />' . \PHP_EOL;
             }
 
             if (isset($_REQUEST['return'])) {
-                echo '<input type="hidden" name="return" value="', htmlspecialchars($_REQUEST['return']), '" />'.PHP_EOL;
+                echo '<input type="hidden" name="return" value="', \htmlspecialchars($_REQUEST['return']), '" />' . \PHP_EOL;
             }
 
-            echo '<input type="hidden" name="page" value="', htmlspecialchars($_REQUEST['page']), '" />'.PHP_EOL;
-            echo '<input type="hidden" name="sortkey" value="', htmlspecialchars($_REQUEST['sortkey']), '" />'.PHP_EOL;
-            echo '<input type="hidden" name="sortdir" value="', htmlspecialchars($_REQUEST['sortdir']), '" />'.PHP_EOL;
-            echo '<input type="hidden" name="strings" value="', htmlspecialchars($_REQUEST['strings']), '" />'.PHP_EOL;
-            echo '<input type="hidden" name="key" value="', htmlspecialchars(urlencode(serialize($_REQUEST['key']))), '" />'.PHP_EOL;
-            echo '</form>'.PHP_EOL;
+            echo '<input type="hidden" name="page" value="', \htmlspecialchars($_REQUEST['page']), '" />' . \PHP_EOL;
+            echo '<input type="hidden" name="sortkey" value="', \htmlspecialchars($_REQUEST['sortkey']), '" />' . \PHP_EOL;
+            echo '<input type="hidden" name="sortdir" value="', \htmlspecialchars($_REQUEST['sortdir']), '" />' . \PHP_EOL;
+            echo '<input type="hidden" name="strings" value="', \htmlspecialchars($_REQUEST['strings']), '" />' . \PHP_EOL;
+            echo '<input type="hidden" name="key" value="', \htmlspecialchars(\urlencode(\serialize($_REQUEST['key']))), '" />' . \PHP_EOL;
+            echo '</form>' . \PHP_EOL;
         } else {
-            $status = $data->deleteRow($_POST['table'], unserialize(urldecode($_POST['key'])));
-            if (0 == $status) {
+            $status = $data->deleteRow($_POST['table'], \unserialize(\urldecode($_POST['key'])));
+
+            if (0 === $status) {
                 $this->doBrowse($this->lang['strrowdeleted']);
-            } elseif ($status == -2) {
+            } elseif (-2 === $status) {
                 $this->doBrowse($this->lang['strrownotunique']);
             } else {
                 $this->doBrowse($this->lang['strrowdeletedbad']);
@@ -996,18 +878,20 @@ class DisplayController extends BaseController
 
         if (isset($_REQUEST['table'])) {
             $constraints = $data->getConstraintsWithFields($_REQUEST['table']);
-            if ($constraints->recordCount() > 0) {
-                $fkey_information['common_url'] = $this->misc->getHREF('schema').'&amp;subject=table';
+
+            if (0 < $constraints->recordCount()) {
+                $fkey_information['common_url'] = $this->misc->getHREF('schema') . '&amp;subject=table';
 
                 // build the FK constraints data structure
                 while (!$constraints->EOF) {
                     $constr = &$constraints->fields;
-                    if ('f' == $constr['contype']) {
+
+                    if ('f' === $constr['contype']) {
                         if (!isset($fkey_information['byconstr'][$constr['conid']])) {
                             $fkey_information['byconstr'][$constr['conid']] = [
-                                'url_data' => 'table='.urlencode($constr['f_table']).'&amp;schema='.urlencode($constr['f_schema']),
-                                'fkeys'    => [],
-                                'consrc'   => $constr['consrc'],
+                                'url_data' => 'table=' . \urlencode($constr['f_table']) . '&amp;schema=' . \urlencode($constr['f_schema']),
+                                'fkeys' => [],
+                                'consrc' => $constr['consrc'],
                             ];
                         }
 
@@ -1028,15 +912,16 @@ class DisplayController extends BaseController
     }
 
     // Print the FK row, used in ajax requests
-    public function doBrowseFK()
+    public function doBrowseFK(): void
     {
         $data = $this->misc->getDatabaseAccessor();
 
         $ops = [];
+
         foreach ($_REQUEST['fkey'] as $x => $y) {
             $ops[$x] = '=';
         }
-        $query             = $data->getSelectSQL($_REQUEST['table'], [], $_REQUEST['fkey'], $ops);
+        $query = $data->getSelectSQL($_REQUEST['table'], [], $_REQUEST['fkey'], $ops);
         $_REQUEST['query'] = $query;
 
         $fkinfo = $this->getFKInfo();
@@ -1054,10 +939,10 @@ class DisplayController extends BaseController
             $max_pages
         );
 
-        echo '<a href="javascript:void(0);" style="display:table-cell;" class="fk_delete"><img alt="[delete]" src="'.$this->misc->icon('Delete').'" /></a>'.PHP_EOL;
+        echo '<a href="javascript:void(0);" style="display:table-cell;" class="fk_delete"><img alt="[delete]" src="' . $this->view->icon('Delete') . '" /></a>' . \PHP_EOL;
         echo '<div style="display:table-cell;">';
 
-        if (is_object($resultset) && $resultset->recordCount() > 0) {
+        if (\is_object($resultset) && 0 < $resultset->recordCount()) {
             /* we are browsing a referenced table here
              * we should show OID if show_oids is true
              * so we give true to withOid in functions bellow
@@ -1065,23 +950,194 @@ class DisplayController extends BaseController
             echo '<table><tr>';
             $this->printTableHeaderCells($resultset, false, true);
             echo '</tr>';
-            echo '<tr class="data1">'.PHP_EOL;
+            echo '<tr class="data1">' . \PHP_EOL;
             $this->printTableRowCells($resultset, $fkinfo, true);
-            echo '</tr>'.PHP_EOL;
-            echo '</table>'.PHP_EOL;
+            echo '</tr>' . \PHP_EOL;
+            echo '</table>' . \PHP_EOL;
         } else {
             echo $this->lang['strnodata'];
         }
         echo '</div>';
     }
 
-    private function _getMinMaxPages($page, $pages)
+    private function _getKeyAndActions(object $resultset, $object, $data, $page, array $_gets)
+    {
+        $key = [];
+        $strings = $_gets['strings'];
+
+        // Fetch unique row identifier, if this is a table browse request.
+        if ($object) {
+            $key = $data->getRowIdentifier($object);
+        }
+        // -1 means no unique keys, other non iterable should be discarded as well
+        if (-1 === $key || \is_iterable($key)) {
+            $key = [];
+        }
+        // Check that the key is actually in the result set.  This can occur for select
+        // operations where the key fields aren't part of the select.  XXX:  We should
+        // be able to support this, somehow.
+        foreach ($key as $v) {
+            // If a key column is not found in the record set, then we
+            // can't use the key.
+            if (!\array_key_exists($v, $resultset->fields)) {
+                $key = [];
+
+                break;
+            }
+        }
+
+        $buttons = [
+            'edit' => [
+                'content' => $this->lang['stredit'],
+                'attr' => [
+                    'href' => [
+                        'url' => 'display',
+                        'urlvars' => \array_merge(
+                            [
+                                'action' => 'confeditrow',
+                                'strings' => $strings,
+                                'page' => $page,
+                            ],
+                            $_gets
+                        ),
+                    ],
+                ],
+            ],
+            'delete' => [
+                'content' => $this->lang['strdelete'],
+                'attr' => [
+                    'href' => [
+                        'url' => 'display',
+                        'urlvars' => \array_merge(
+                            [
+                                'action' => 'confdelrow',
+                                'strings' => $strings,
+                                'page' => $page,
+                            ],
+                            $_gets
+                        ),
+                    ],
+                ],
+            ],
+        ];
+        $actions = [
+            'actionbuttons' => &$buttons,
+            'place' => 'display-browse',
+        ];
+
+        foreach (\array_keys($actions['actionbuttons']) as $action) {
+            $actions['actionbuttons'][$action]['attr']['href']['urlvars'] = \array_merge(
+                $actions['actionbuttons'][$action]['attr']['href']['urlvars'],
+                $_gets
+            );
+        }
+
+        return [$actions, $key];
+    }
+
+    private function _printResultsTableActionButtons(\ADORecordSet $resultset, $key, $actions, bool $display_action_column, string $buttonclass): void
+    {
+        if (!$display_action_column) {
+            return;
+        }
+
+        $edit_params = $actions['actionbuttons']['edit'] ?? [];
+        $delete_params = $actions['actionbuttons']['delete'] ?? [];
+
+        $keys_array = [];
+        $has_nulls = false;
+
+        foreach ($key as $v) {
+            if (null === $resultset->fields[$v]) {
+                $has_nulls = true;
+
+                break;
+            }
+            $keys_array["key[{$v}]"] = $resultset->fields[$v];
+        }
+
+        if ($has_nulls) {
+            echo '<td>&nbsp;</td>' . \PHP_EOL;
+
+            return;
+        }
+        // Display edit and delete links if we have a key
+        if (isset($actions['actionbuttons']['edit'])) {
+            $actions['actionbuttons']['edit'] = $edit_params;
+            $actions['actionbuttons']['edit']['attr']['href']['urlvars'] = \array_merge(
+                $actions['actionbuttons']['edit']['attr']['href']['urlvars'],
+                $keys_array
+            );
+        }
+
+        if (isset($actions['actionbuttons']['delete'])) {
+            $actions['actionbuttons']['delete'] = $delete_params;
+            $actions['actionbuttons']['delete']['attr']['href']['urlvars'] = \array_merge(
+                $actions['actionbuttons']['delete']['attr']['href']['urlvars'],
+                $keys_array
+            );
+        }
+        echo \sprintf('<td class="%s" style="white-space:nowrap">', $buttonclass);
+
+        foreach ($actions['actionbuttons'] as $action) {
+            $this->printLink($action, true, __METHOD__);
+        }
+        echo '</td>' . \PHP_EOL;
+    }
+
+    /**
+     * @param bool[]        $printvalOpts
+     * @param \ADORecordSet $resultset
+     * @param array         $fkey_information
+     * @param mixed         $k
+     * @param mixed         $v
+     */
+    private function _printFKLinks(\ADORecordSet $resultset, array $fkey_information, $k, $v, array &$printvalOpts): void
+    {
+        if ((null === $v) || !isset($fkey_information['byfield'][$k])) {
+            return;
+        }
+
+        foreach ($fkey_information['byfield'][$k] as $conid) {
+            $query_params = $fkey_information['byconstr'][$conid]['url_data'];
+
+            foreach ($fkey_information['byconstr'][$conid]['fkeys'] as $p_field => $f_field) {
+                $query_params .= '&amp;' . \urlencode("fkey[{$f_field}]") . '=' . \urlencode($resultset->fields[$p_field]);
+            }
+
+            // $fkey_information['common_url'] is already urlencoded
+            $query_params .= '&amp;' . $fkey_information['common_url'];
+            $title = \htmlentities($fkey_information['byconstr'][$conid]['consrc'], \ENT_QUOTES, 'UTF-8');
+            echo '<div style="display:inline-block;">';
+            echo \sprintf('<a class="fk fk_%s" href="display?%s">', \htmlentities($conid, \ENT_QUOTES, 'UTF-8'), $query_params);
+            echo \sprintf('<img src="%s" style="vertical-align:middle;" alt="[fk]" title="%s" />', $this->view->icon('ForeignKey'), $title);
+            echo '</a>';
+            echo '</div>';
+        }
+        $printvalOpts['class'] = 'fk_value';
+    }
+
+    private function _unserializeIfNotArray(array $the_array, string $key)
+    {
+        if (!isset($the_array[$key])) {
+            return [];
+        }
+
+        if (\is_array($the_array[$key])) {
+            return $the_array[$key];
+        }
+
+        return \unserialize(\urldecode($the_array[$key]));
+    }
+
+    private function _getMinMaxPages(int $page, int $pages)
     {
         $window = 10;
+
         if ($page <= $window) {
             $min_page = 1;
-            $max_page = min(2 * $window, $pages);
-        } elseif ($page > $window && $pages >= $page + $window) {
+            $max_page = \min(2 * $window, $pages);
+        } elseif ($page > $window && $page + $window <= $pages) {
             $min_page = ($page - $window) + 1;
             $max_page = $page + $window;
         } else {
@@ -1091,8 +1147,8 @@ class DisplayController extends BaseController
 
         // Make sure min_page is always at least 1
         // and max_page is never greater than $pages
-        $min_page = max($min_page, 1);
-        $max_page = min($max_page, $pages);
+        $min_page = \max($min_page, 1);
+        $max_page = \min($max_page, $pages);
 
         return [$min_page, $max_page];
     }
@@ -1105,37 +1161,38 @@ class DisplayController extends BaseController
      * @param array $gets      -  the parameters to include in the link to the wanted page
      * @param int   $max_width - the number of pages to make available at any one time (default = 20)
      *
-     * @return string the pagination links
+     * @return null|string the pagination links
      */
     private function _printPages($page, $pages, $gets, $max_width = 20)
     {
         $lang = $this->lang;
         $page = (int) $page;
 
-        if ($page < 0 || $page > $pages || $pages <= 1 || $max_width <= 0) {
+        if (0 > $page || $page > $pages || 1 >= $pages || 0 >= $max_width) {
             return;
         }
 
         unset($gets['page']);
-        $url = http_build_query($gets);
+        $url = \http_build_query($gets);
 
-        $result = '<p style="text-align: center">'.PHP_EOL;
-        if ($page != 1) {
-            $result .= sprintf('<a class="pagenav" href="?%s&page=1">%s</a>%s&nbsp;', $url, $lang['strfirst'], PHP_EOL);
-            $result .= sprintf('<a class="pagenav" href="?%s&page=%s">%s</a>%s', $url, $page - 1, $lang['strprev'], PHP_EOL);
+        $result = '<p style="text-align: center">' . \PHP_EOL;
+
+        if (1 !== $page) {
+            $result .= \sprintf('<a class="pagenav" href="?%s&page=1">%s</a>%s&nbsp;', $url, $lang['strfirst'], \PHP_EOL);
+            $result .= \sprintf('<a class="pagenav" href="?%s&page=%s">%s</a>%s', $url, $page - 1, $lang['strprev'], \PHP_EOL);
         }
 
-        list($min_page, $max_page) = $this->_getMinMaxPages($page, $pages);
+        [$min_page, $max_page] = $this->_getMinMaxPages($page, $pages);
 
         for ($i = $min_page; $i <= $max_page; ++$i) {
-            $result .= (($i === $page) ? $i : sprintf('<a class="pagenav" href="display?%s&page=%s">%s</a>', $url, $i, $i)).PHP_EOL;
+            $result .= (($i === $page) ? $i : \sprintf('<a class="pagenav" href="display?%s&page=%s">%s</a>', $url, $i, $i)) . \PHP_EOL;
         }
 
-        if ($page != $pages) {
-            $result .= sprintf('<a class="pagenav" href="?%s&page=%s">%s</a>%s', $url, $page + 1, $lang['strnext'], PHP_EOL);
-            $result .= sprintf('&nbsp;<a class="pagenav" href="?%s&page=%s">%s</a>%s', $url, $pages, $lang['strlast'], PHP_EOL);
+        if ($page !== $pages) {
+            $result .= \sprintf('<a class="pagenav" href="?%s&page=%s">%s</a>%s', $url, $page + 1, $lang['strnext'], \PHP_EOL);
+            $result .= \sprintf('&nbsp;<a class="pagenav" href="?%s&page=%s">%s</a>%s', $url, $pages, $lang['strlast'], \PHP_EOL);
         }
-        $result .= '</p>'.PHP_EOL;
+        $result .= '</p>' . \PHP_EOL;
 
         return $result;
     }

@@ -1,17 +1,20 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 // Include application functions
 
-$do_render = false;
-if (!defined('BASE_PATH')) {
-    require_once '../../src/lib.inc.php';
-    $do_render = true;
-}
-$controller = new \PHPPgAdmin\Controller\ConversionsController($container);
-if ($do_render) {
-    $controller->render();
+function conversionsFactory($container)
+{
+    $do_render = false;
+
+    $controller = new \PHPPgAdmin\Controller\ConversionsController($container);
+
+    if ($do_render) {
+        $controller->render();
+    }
+
+    return $controller;
 }

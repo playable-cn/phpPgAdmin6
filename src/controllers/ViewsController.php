@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Controller;
@@ -10,14 +10,13 @@ use PHPPgAdmin\Decorators\Decorator;
 
 /**
  * Base controller class.
- *
- * @package PHPPgAdmin
  */
 class ViewsController extends BaseController
 {
     use \PHPPgAdmin\Traits\ViewsMatviewsTrait;
 
-    public $table_place      = 'views-views';
+    public $table_place = 'views-views';
+
     public $controller_title = 'strviews';
 
     // this member variable is view for views and matview for materialized views
@@ -28,10 +27,11 @@ class ViewsController extends BaseController
      */
     public function render()
     {
-        if ('tree' == $this->action) {
+        if ('tree' === $this->action) {
             return $this->doTree();
         }
-        if ('subtree' == $this->action) {
+
+        if ('subtree' === $this->action) {
             return $this->doSubTree();
         }
 
@@ -95,6 +95,7 @@ class ViewsController extends BaseController
                 $this->doDrop(true);
 
                 break;
+
             default:
                 $this->doDefault();
 
@@ -109,7 +110,7 @@ class ViewsController extends BaseController
      *
      * @param mixed $msg
      */
-    public function doDefault($msg = '')
+    public function doDefault($msg = ''): void
     {
         $data = $this->misc->getDatabaseAccessor();
 
@@ -123,17 +124,17 @@ class ViewsController extends BaseController
             $this->keystring => [
                 'title' => $this->lang['strview'],
                 'field' => Decorator::field('relname'),
-                'url'   => \SUBFOLDER."/redirect/view?{$this->misc->href}&amp;",
-                'vars'  => [$this->keystring => 'relname'],
+                'url' => self::SUBFOLDER . "/redirect/view?{$this->misc->href}&amp;",
+                'vars' => [$this->keystring => 'relname'],
             ],
-            'owner'          => [
+            'owner' => [
                 'title' => $this->lang['strowner'],
                 'field' => Decorator::field('relowner'),
             ],
-            'actions'        => [
+            'actions' => [
                 'title' => $this->lang['stractions'],
             ],
-            'comment'        => [
+            'comment' => [
                 'title' => $this->lang['strcomment'],
                 'field' => Decorator::field('relcomment'),
             ],
@@ -142,29 +143,29 @@ class ViewsController extends BaseController
         $actions = [
             'multiactions' => [
                 'keycols' => [$this->keystring => 'relname'],
-                'url'     => 'views',
+                'url' => 'views',
             ],
-            'browse'       => [
+            'browse' => [
                 'content' => $this->lang['strbrowse'],
-                'attr'    => [
+                'attr' => [
                     'href' => [
-                        'url'     => 'display',
+                        'url' => 'display',
                         'urlvars' => [
-                            'action'         => 'confselectrows',
-                            'subject'        => $this->keystring,
-                            'return'         => 'schema',
+                            'action' => 'confselectrows',
+                            'subject' => $this->keystring,
+                            'return' => 'schema',
                             $this->keystring => Decorator::field('relname'),
                         ],
                     ],
                 ],
             ],
-            'select'       => [
+            'select' => [
                 'content' => $this->lang['strselect'],
-                'attr'    => [
+                'attr' => [
                     'href' => [
-                        'url'     => 'views',
+                        'url' => 'views',
                         'urlvars' => [
-                            'action'         => 'confselectrows',
+                            'action' => 'confselectrows',
                             $this->keystring => Decorator::field('relname'),
                         ],
                     ],
@@ -178,26 +179,26 @@ class ViewsController extends BaseController
             //                'vars'    => array($this->keystring => 'relname'),
             //            ),
 
-            'alter'        => [
+            'alter' => [
                 'content' => $this->lang['stralter'],
-                'attr'    => [
+                'attr' => [
                     'href' => [
-                        'url'     => 'viewproperties',
+                        'url' => 'viewproperties',
                         'urlvars' => [
-                            'action'         => 'confirm_alter',
+                            'action' => 'confirm_alter',
                             $this->keystring => Decorator::field('relname'),
                         ],
                     ],
                 ],
             ],
-            'drop'         => [
+            'drop' => [
                 'multiaction' => 'confirm_drop',
-                'content'     => $this->lang['strdrop'],
-                'attr'        => [
+                'content' => $this->lang['strdrop'],
+                'attr' => [
                     'href' => [
-                        'url'     => 'views',
+                        'url' => 'views',
                         'urlvars' => [
-                            'action'         => 'confirm_drop',
+                            'action' => 'confirm_drop',
                             $this->keystring => Decorator::field('relname'),
                         ],
                     ],
@@ -208,36 +209,36 @@ class ViewsController extends BaseController
         echo $this->printTable($views, $columns, $actions, $this->table_place, $this->lang['strnoviews']);
 
         $navlinks = [
-            'create'    => [
-                'attr'    => [
+            'create' => [
+                'attr' => [
                     'href' => [
-                        'url'     => 'views',
+                        'url' => 'views',
                         'urlvars' => [
-                            'action'   => 'create',
-                            'server'   => $_REQUEST['server'],
+                            'action' => 'create',
+                            'server' => $_REQUEST['server'],
                             'database' => $_REQUEST['database'],
-                            'schema'   => $_REQUEST['schema'],
+                            'schema' => $_REQUEST['schema'],
                         ],
                     ],
                 ],
                 'content' => $this->lang['strcreateview'],
             ],
             'createwiz' => [
-                'attr'    => [
+                'attr' => [
                     'href' => [
-                        'url'     => 'views',
+                        'url' => 'views',
                         'urlvars' => [
-                            'action'   => 'wiz_create',
-                            'server'   => $_REQUEST['server'],
+                            'action' => 'wiz_create',
+                            'server' => $_REQUEST['server'],
                             'database' => $_REQUEST['database'],
-                            'schema'   => $_REQUEST['schema'],
+                            'schema' => $_REQUEST['schema'],
                         ],
                     ],
                 ],
                 'content' => $this->lang['strcreateviewwiz'],
             ],
         ];
-        $this->printNavLinks($navlinks, $this->table_place, get_defined_vars());
+        $this->printNavLinks($navlinks, $this->table_place, \get_defined_vars());
     }
 
     /**
@@ -252,12 +253,12 @@ class ViewsController extends BaseController
         $reqvars = $this->misc->getRequestVars($this->keystring);
 
         $attrs = [
-            'text'       => Decorator::field('relname'),
-            'icon'       => 'View',
+            'text' => Decorator::field('relname'),
+            'icon' => 'View',
             'iconAction' => Decorator::url('display', $reqvars, [$this->keystring => Decorator::field('relname')]),
-            'toolTip'    => Decorator::field('relcomment'),
-            'action'     => Decorator::redirecturl('redirect', $reqvars, [$this->keystring => Decorator::field('relname')]),
-            'branch'     => Decorator::url('views', $reqvars, ['action' => 'subtree', $this->keystring => Decorator::field('relname')]),
+            'toolTip' => Decorator::field('relcomment'),
+            'action' => Decorator::redirecturl('redirect', $reqvars, [$this->keystring => Decorator::field('relname')]),
+            'branch' => Decorator::url('views', $reqvars, ['action' => 'subtree', $this->keystring => Decorator::field('relname')]),
         ];
 
         return $this->printTree($views, $attrs, 'views');
@@ -280,45 +281,48 @@ class ViewsController extends BaseController
             $this->printTrail('view');
             $this->printTitle($this->lang['strdrop'], 'pg.view.drop');
 
-            echo '<form action="'.\SUBFOLDER.'/src/views/views" method="post">'.PHP_EOL;
+            echo '<form action="' . self::SUBFOLDER . '/src/views/views" method="post">' . \PHP_EOL;
 
             //If multi drop
             if (isset($_REQUEST['ma'])) {
                 foreach ($_REQUEST['ma'] as $v) {
-                    $a = unserialize(htmlspecialchars_decode($v, ENT_QUOTES));
-                    echo '<p>', sprintf($this->lang['strconfdropview'], $this->misc->printVal($a['view'])), '</p>'.PHP_EOL;
-                    echo '<input type="hidden" name="view[]" value="', htmlspecialchars($a['view']), '" />'.PHP_EOL;
+                    $a = \unserialize(\htmlspecialchars_decode($v, \ENT_QUOTES));
+                    echo '<p>', \sprintf($this->lang['strconfdropview'], $this->misc->printVal($a['view'])), '</p>' . \PHP_EOL;
+                    echo '<input type="hidden" name="view[]" value="', \htmlspecialchars($a['view']), '" />' . \PHP_EOL;
                 }
             } else {
-                echo '<p>', sprintf($this->lang['strconfdropview'], $this->misc->printVal($_REQUEST['view'])), '</p>'.PHP_EOL;
-                echo '<input type="hidden" name="view" value="', htmlspecialchars($_REQUEST['view']), '" />'.PHP_EOL;
+                echo '<p>', \sprintf($this->lang['strconfdropview'], $this->misc->printVal($_REQUEST['view'])), '</p>' . \PHP_EOL;
+                echo '<input type="hidden" name="view" value="', \htmlspecialchars($_REQUEST['view']), '" />' . \PHP_EOL;
             }
 
-            echo '<input type="hidden" name="action" value="drop" />'.PHP_EOL;
+            echo '<input type="hidden" name="action" value="drop" />' . \PHP_EOL;
 
             echo $this->misc->form;
-            echo "<p><input type=\"checkbox\" id=\"cascade\" name=\"cascade\" /> <label for=\"cascade\">{$this->lang['strcascade']}</label></p>".PHP_EOL;
-            echo "<input type=\"submit\" name=\"drop\" value=\"{$this->lang['strdrop']}\" />".PHP_EOL;
-            echo "<input type=\"submit\" name=\"cancel\" value=\"{$this->lang['strcancel']}\" />".PHP_EOL;
-            echo '</form>'.PHP_EOL;
+            echo "<p><input type=\"checkbox\" id=\"cascade\" name=\"cascade\" /> <label for=\"cascade\">{$this->lang['strcascade']}</label></p>" . \PHP_EOL;
+            echo "<input type=\"submit\" name=\"drop\" value=\"{$this->lang['strdrop']}\" />" . \PHP_EOL;
+            echo "<input type=\"submit\" name=\"cancel\" value=\"{$this->lang['strcancel']}\" />" . \PHP_EOL;
+            echo '</form>' . \PHP_EOL;
         } else {
-            if (is_array($_POST['view'])) {
-                $msg    = '';
+            if (\is_array($_POST['view'])) {
+                $msg = '';
                 $status = $data->beginTransaction();
-                if (0 == $status) {
+
+                if (0 === $status) {
                     foreach ($_POST['view'] as $s) {
                         $status = $data->dropView($s, isset($_POST['cascade']));
-                        if (0 == $status) {
-                            $msg .= sprintf('%s: %s<br />', htmlentities($s, ENT_QUOTES, 'UTF-8'), $this->lang['strviewdropped']);
+
+                        if (0 === $status) {
+                            $msg .= \sprintf('%s: %s<br />', \htmlentities($s, \ENT_QUOTES, 'UTF-8'), $this->lang['strviewdropped']);
                         } else {
                             $data->endTransaction();
-                            $this->doDefault(sprintf('%s%s: %s<br />', $msg, htmlentities($s, ENT_QUOTES, 'UTF-8'), $this->lang['strviewdroppedbad']));
+                            $this->doDefault(\sprintf('%s%s: %s<br />', $msg, \htmlentities($s, \ENT_QUOTES, 'UTF-8'), $this->lang['strviewdroppedbad']));
 
                             return;
                         }
                     }
                 }
-                if (0 == $data->endTransaction()) {
+
+                if (0 === $data->endTransaction()) {
                     // Everything went fine, back to the Default page....
                     $this->misc->setReloadBrowser(true);
                     $this->doDefault($msg);
@@ -327,7 +331,8 @@ class ViewsController extends BaseController
                 }
             } else {
                 $status = $data->dropView($_POST['view'], isset($_POST['cascade']));
-                if (0 == $status) {
+
+                if (0 === $status) {
                     $this->misc->setReloadBrowser(true);
                     $this->doDefault($this->lang['strviewdropped']);
                 } else {
@@ -365,7 +370,7 @@ class ViewsController extends BaseController
      *
      * @param mixed $msg
      */
-    public function doWizardCreate($msg = '')
+    public function doWizardCreate($msg = ''): void
     {
         $this->printTrail('schema');
         $this->printTitle($this->lang['strcreateviewwiz'], 'pg.view.create');
@@ -379,7 +384,7 @@ class ViewsController extends BaseController
      *
      * @param mixed $msg
      */
-    public function doCreate($msg = '')
+    public function doCreate($msg = ''): void
     {
         $data = $this->misc->getDatabaseAccessor();
 
@@ -398,40 +403,41 @@ class ViewsController extends BaseController
         $this->printTitle($this->lang['strcreateview'], 'pg.view.create');
         $this->printMsg($msg);
 
-        echo '<form action="'.\SUBFOLDER."/src/views/{$this->view_name}\" method=\"post\">".PHP_EOL;
-        echo '<table style="width: 100%">'.PHP_EOL;
-        echo "\t<tr>\n\t\t<th class=\"data left required\">{$this->lang['strname']}</th>".PHP_EOL;
+        echo '<form action="' . self::SUBFOLDER . "/src/views/{$this->view_name}\" method=\"post\">" . \PHP_EOL;
+        echo '<table style="width: 100%">' . \PHP_EOL;
+        echo "\t<tr>\n\t\t<th class=\"data left required\">{$this->lang['strname']}</th>" . \PHP_EOL;
         echo "\t<td class=\"data1\"><input name=\"formView\" size=\"32\" maxlength=\"{$data->_maxNameLen}\" value=\"",
-        htmlspecialchars($_REQUEST['formView']), "\" /></td>\n\t</tr>".PHP_EOL;
-        echo "\t<tr>\n\t\t<th class=\"data left required\">{$this->lang['strdefinition']}</th>".PHP_EOL;
+        \htmlspecialchars($_REQUEST['formView']), "\" /></td>\n\t</tr>" . \PHP_EOL;
+        echo "\t<tr>\n\t\t<th class=\"data left required\">{$this->lang['strdefinition']}</th>" . \PHP_EOL;
         echo "\t<td class=\"data1\"><textarea style=\"width:100%;\" rows=\"10\" cols=\"50\" name=\"formDefinition\">",
-        htmlspecialchars($_REQUEST['formDefinition']), "</textarea></td>\n\t</tr>".PHP_EOL;
-        echo "\t<tr>\n\t\t<th class=\"data left\">{$this->lang['strcomment']}</th>".PHP_EOL;
+        \htmlspecialchars($_REQUEST['formDefinition']), "</textarea></td>\n\t</tr>" . \PHP_EOL;
+        echo "\t<tr>\n\t\t<th class=\"data left\">{$this->lang['strcomment']}</th>" . \PHP_EOL;
         echo "\t\t<td class=\"data1\"><textarea name=\"formComment\" rows=\"3\" cols=\"32\">",
-        htmlspecialchars($_REQUEST['formComment']), "</textarea></td>\n\t</tr>".PHP_EOL;
-        echo '</table>'.PHP_EOL;
-        echo '<p><input type="hidden" name="action" value="save_create" />'.PHP_EOL;
+        \htmlspecialchars($_REQUEST['formComment']), "</textarea></td>\n\t</tr>" . \PHP_EOL;
+        echo '</table>' . \PHP_EOL;
+        echo '<p><input type="hidden" name="action" value="save_create" />' . \PHP_EOL;
         echo $this->misc->form;
-        echo "<input type=\"submit\" value=\"{$this->lang['strcreate']}\" />".PHP_EOL;
-        echo "<input type=\"submit\" name=\"cancel\" value=\"{$this->lang['strcancel']}\" /></p>".PHP_EOL;
-        echo '</form>'.PHP_EOL;
+        echo "<input type=\"submit\" value=\"{$this->lang['strcreate']}\" />" . \PHP_EOL;
+        echo "<input type=\"submit\" name=\"cancel\" value=\"{$this->lang['strcancel']}\" /></p>" . \PHP_EOL;
+        echo '</form>' . \PHP_EOL;
     }
 
     /**
      * Actually creates the new view in the database.
      */
-    public function doSaveCreate()
+    public function doSaveCreate(): void
     {
         $data = $this->misc->getDatabaseAccessor();
 
         // Check that they've given a name and a definition
-        if ('' == $_POST['formView']) {
+        if ('' === $_POST['formView']) {
             $this->doCreate($this->lang['strviewneedsname']);
-        } elseif ('' == $_POST['formDefinition']) {
+        } elseif ('' === $_POST['formDefinition']) {
             $this->doCreate($this->lang['strviewneedsdef']);
         } else {
             $status = $data->createView($_POST['formView'], $_POST['formDefinition'], false, $_POST['formComment']);
-            if (0 == $status) {
+
+            if (0 === $status) {
                 $this->misc->setReloadBrowser(true);
                 $this->doDefault($this->lang['strviewcreated']);
             } else {

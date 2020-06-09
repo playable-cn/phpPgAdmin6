@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Controller;
@@ -10,8 +10,6 @@ use PHPPgAdmin\Decorators\Decorator;
 
 /**
  * Base controller class.
- *
- * @package PHPPgAdmin
  */
 class ConversionsController extends BaseController
 {
@@ -22,7 +20,7 @@ class ConversionsController extends BaseController
      */
     public function render()
     {
-        if ('tree' == $this->action) {
+        if ('tree' === $this->action) {
             return $this->doTree();
         }
 
@@ -43,10 +41,8 @@ class ConversionsController extends BaseController
      * Show default list of conversions in the database.
      *
      * @param string $msg
-     *
-     * @return string|void
      */
-    public function doDefault($msg = '')
+    public function doDefault($msg = ''): void
     {
         $data = $this->misc->getDatabaseAccessor();
 
@@ -57,7 +53,7 @@ class ConversionsController extends BaseController
         $conversions = $data->getconversions();
 
         $columns = [
-            'conversion'      => [
+            'conversion' => [
                 'title' => $this->lang['strname'],
                 'field' => Decorator::field('conname'),
             ],
@@ -69,12 +65,12 @@ class ConversionsController extends BaseController
                 'title' => $this->lang['strtargetencoding'],
                 'field' => Decorator::field('contoencoding'),
             ],
-            'default'         => [
+            'default' => [
                 'title' => $this->lang['strdefault'],
                 'field' => Decorator::field('condefault'),
-                'type'  => 'yesno',
+                'type' => 'yesno',
             ],
-            'comment'         => [
+            'comment' => [
                 'title' => $this->lang['strcomment'],
                 'field' => Decorator::field('concomment'),
             ],
@@ -91,7 +87,7 @@ class ConversionsController extends BaseController
 
         $constraints = $data->getConstraints($_REQUEST['table']);
 
-        $getIcon = function ($f) {
+        $getIcon = static function ($f) {
             switch ($f['contype']) {
                 case 'u':
                     return 'UniqueConstraint';

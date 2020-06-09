@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Traits;
@@ -14,7 +14,9 @@ use PHPPgAdmin\Decorators\Decorator;
 trait ViewsMatViewsPropertiesTrait
 {
     public $href = '';
+
     public $misc;
+
     public $view_name;
 
     /**
@@ -22,11 +24,11 @@ trait ViewsMatViewsPropertiesTrait
      *
      * @param mixed $msg
      */
-    public function doDefault($msg = '')
+    public function doDefault($msg = ''): void
     {
         $data = $this->misc->getDatabaseAccessor();
 
-        $attPre = function (&$rowdata) use ($data) {
+        $attPre = static function (&$rowdata) use ($data): void {
             $rowdata->fields['+type'] = $data->formatType($rowdata->fields['type'], $rowdata->fields['atttypmod']);
         };
 
@@ -41,17 +43,17 @@ trait ViewsMatViewsPropertiesTrait
 
         // Show comment if any
         if (null !== $vdata->fields['relcomment']) {
-            echo '<p class="comment">', $this->misc->printVal($vdata->fields['relcomment']), '</p>'.PHP_EOL;
+            echo '<p class="comment">', $this->misc->printVal($vdata->fields['relcomment']), '</p>' . \PHP_EOL;
         }
 
         $columns = [
-            'column'  => [
+            'column' => [
                 'title' => $this->lang['strcolumn'],
                 'field' => Decorator::field('attname'),
-                'url'   => "colproperties?subject=column&amp;{$this->misc->href}&amp;view=".urlencode($_REQUEST[$this->subject]).'&amp;',
-                'vars'  => ['column' => 'attname'],
+                'url' => "colproperties?subject=column&amp;{$this->misc->href}&amp;view=" . \urlencode($_REQUEST[$this->subject]) . '&amp;',
+                'vars' => ['column' => 'attname'],
             ],
-            'type'    => [
+            'type' => [
                 'title' => $this->lang['strtype'],
                 'field' => Decorator::field('+type'),
             ],
@@ -71,13 +73,13 @@ trait ViewsMatViewsPropertiesTrait
         $actions = [
             'alter' => [
                 'content' => $this->lang['stralter'],
-                'attr'    => [
+                'attr' => [
                     'href' => [
-                        'url'     => $this->view_name,
+                        'url' => $this->view_name,
                         'urlvars' => [
-                            'action'       => 'properties',
+                            'action' => 'properties',
                             $this->subject => $_REQUEST[$this->subject],
-                            'column'       => Decorator::field('attname'),
+                            'column' => Decorator::field('attname'),
                         ],
                     ],
                 ],
@@ -86,64 +88,64 @@ trait ViewsMatViewsPropertiesTrait
 
         echo $this->printTable($attrs, $columns, $actions, "{$this->view_name}-{$this->view_name}", $this->lang['strnodata'], $attPre);
 
-        echo '<br />'.PHP_EOL;
+        echo '<br />' . \PHP_EOL;
 
         $navlinks = [
             'browse' => [
-                'attr'    => [
+                'attr' => [
                     'href' => [
-                        'url'     => 'display',
+                        'url' => 'display',
                         'urlvars' => [
-                            'server'       => $_REQUEST['server'],
-                            'database'     => $_REQUEST['database'],
-                            'schema'       => $_REQUEST['schema'],
+                            'server' => $_REQUEST['server'],
+                            'database' => $_REQUEST['database'],
+                            'schema' => $_REQUEST['schema'],
                             $this->subject => $_REQUEST[$this->subject],
-                            'subject'      => $this->subject,
-                            'return'       => $this->subject,
+                            'subject' => $this->subject,
+                            'return' => $this->subject,
                         ],
                     ],
                 ],
                 'content' => $this->lang['strbrowse'],
             ],
             'select' => [
-                'attr'    => [
+                'attr' => [
                     'href' => [
-                        'url'     => str_replace('properties', 's', $this->view_name),
+                        'url' => \str_replace('properties', 's', $this->view_name),
                         'urlvars' => [
-                            'action'       => 'confselectrows',
-                            'server'       => $_REQUEST['server'],
-                            'database'     => $_REQUEST['database'],
-                            'schema'       => $_REQUEST['schema'],
+                            'action' => 'confselectrows',
+                            'server' => $_REQUEST['server'],
+                            'database' => $_REQUEST['database'],
+                            'schema' => $_REQUEST['schema'],
                             $this->subject => $_REQUEST[$this->subject],
                         ],
                     ],
                 ],
                 'content' => $this->lang['strselect'],
             ],
-            'drop'   => [
-                'attr'    => [
+            'drop' => [
+                'attr' => [
                     'href' => [
-                        'url'     => str_replace('properties', 's', $this->view_name),
+                        'url' => \str_replace('properties', 's', $this->view_name),
                         'urlvars' => [
-                            'action'       => 'confirm_drop',
-                            'server'       => $_REQUEST['server'],
-                            'database'     => $_REQUEST['database'],
-                            'schema'       => $_REQUEST['schema'],
+                            'action' => 'confirm_drop',
+                            'server' => $_REQUEST['server'],
+                            'database' => $_REQUEST['database'],
+                            'schema' => $_REQUEST['schema'],
                             $this->subject => $_REQUEST[$this->subject],
                         ],
                     ],
                 ],
                 'content' => $this->lang['strdrop'],
             ],
-            'alter'  => [
-                'attr'    => [
+            'alter' => [
+                'attr' => [
                     'href' => [
-                        'url'     => $this->view_name,
+                        'url' => $this->view_name,
                         'urlvars' => [
-                            'action'       => 'confirm_alter',
-                            'server'       => $_REQUEST['server'],
-                            'database'     => $_REQUEST['database'],
-                            'schema'       => $_REQUEST['schema'],
+                            'action' => 'confirm_alter',
+                            'server' => $_REQUEST['server'],
+                            'database' => $_REQUEST['database'],
+                            'schema' => $_REQUEST['schema'],
                             $this->subject => $_REQUEST[$this->subject],
                         ],
                     ],
@@ -151,17 +153,18 @@ trait ViewsMatViewsPropertiesTrait
                 'content' => $this->lang['stralter'],
             ],
         ];
-        $this->prtrace($this->view_name);
-        if ($this->view_name === 'materializedviewproperties') {
+        //$this->prtrace($this->view_name);
+
+        if ('materializedviewproperties' === $this->view_name) {
             $navlinks['refresh'] = [
-                'attr'    => [
+                'attr' => [
                     'href' => [
-                        'url'     => $this->view_name,
+                        'url' => $this->view_name,
                         'urlvars' => [
-                            'action'       => 'refresh',
-                            'server'       => $_REQUEST['server'],
-                            'database'     => $_REQUEST['database'],
-                            'schema'       => $_REQUEST['schema'],
+                            'action' => 'refresh',
+                            'server' => $_REQUEST['server'],
+                            'database' => $_REQUEST['database'],
+                            'schema' => $_REQUEST['schema'],
                             $this->subject => $_REQUEST[$this->subject],
                         ],
                     ],
@@ -170,7 +173,7 @@ trait ViewsMatViewsPropertiesTrait
             ];
         }
 
-        $this->printNavLinks($navlinks, "{$this->view_name}-{$this->view_name}", get_defined_vars());
+        $this->printNavLinks($navlinks, "{$this->view_name}-{$this->view_name}", \get_defined_vars());
     }
 
     public function doTree()
@@ -181,32 +184,32 @@ trait ViewsMatViewsPropertiesTrait
         $columns = $data->getTableAttributes($_REQUEST[$this->subject]);
 
         $attrs = [
-            'text'       => Decorator::field('attname'),
-            'action'     => Decorator::actionurl(
+            'text' => Decorator::field('attname'),
+            'action' => Decorator::actionurl(
                 'colproperties',
                 $reqvars,
                 [
                     $this->subject => $_REQUEST[$this->subject],
-                    'column'       => Decorator::field('attname'),
+                    'column' => Decorator::field('attname'),
                 ]
             ),
-            'icon'       => 'Column',
+            'icon' => 'Column',
             'iconAction' => Decorator::url(
                 'display',
                 $reqvars,
                 [
                     $this->subject => $_REQUEST[$this->subject],
-                    'column'       => Decorator::field('attname'),
-                    'query'        => Decorator::replace(
+                    'column' => Decorator::field('attname'),
+                    'query' => Decorator::replace(
                         'SELECT "%column%", count(*) AS "count" FROM %view% GROUP BY "%column%" ORDER BY "%column%"',
                         [
                             '%column%' => Decorator::field('attname'),
-                            '%view%'   => $_REQUEST[$this->subject],
+                            '%view%' => $_REQUEST[$this->subject],
                         ]
                     ),
                 ]
             ),
-            'toolTip'    => Decorator::field('comment'),
+            'toolTip' => Decorator::field('comment'),
         ];
 
         return $this->printTree($columns, $attrs, 'viewcolumns');
@@ -221,14 +224,14 @@ trait ViewsMatViewsPropertiesTrait
      *
      * @param mixed $msg
      */
-    public function doExport($msg = '')
+    public function doExport($msg = ''): void
     {
         $this->printTrail($this->subject);
         $this->printTabs($this->subject, 'export');
         $this->printMsg($msg);
 
         $subject = $this->subject;
-        $object  = $_REQUEST[$this->subject];
+        $object = $_REQUEST[$this->subject];
 
         echo $this->formHeader();
         // Data only
@@ -250,7 +253,7 @@ trait ViewsMatViewsPropertiesTrait
      *
      * @param mixed $msg
      */
-    public function doDefinition($msg = '')
+    public function doDefinition($msg = ''): void
     {
         $data = $this->misc->getDatabaseAccessor();
 
@@ -261,34 +264,34 @@ trait ViewsMatViewsPropertiesTrait
         $this->printTabs($this->subject, 'definition');
         $this->printMsg($msg);
 
-        if ($vdata->recordCount() > 0) {
+        if (0 < $vdata->recordCount()) {
             // Show comment if any
             if (null !== $vdata->fields['relcomment']) {
-                echo '<p class="comment">', $this->misc->printVal($vdata->fields['relcomment']), '</p>'.PHP_EOL;
+                echo '<p class="comment">', $this->misc->printVal($vdata->fields['relcomment']), '</p>' . \PHP_EOL;
             }
 
-            echo '<table style="width: 100%">'.PHP_EOL;
-            echo "<tr><th class=\"data\">{$this->lang['strdefinition']}</th></tr>".PHP_EOL;
-            echo '<tr><td class="data1">', $this->misc->printVal($vdata->fields['vwdefinition']), '</td></tr>'.PHP_EOL;
-            echo '</table>'.PHP_EOL;
+            echo '<table style="width: 100%">' . \PHP_EOL;
+            echo "<tr><th class=\"data\">{$this->lang['strdefinition']}</th></tr>" . \PHP_EOL;
+            echo '<tr><td class="data1">', $this->misc->printVal($vdata->fields['vwdefinition']), '</td></tr>' . \PHP_EOL;
+            echo '</table>' . \PHP_EOL;
         } else {
-            echo "<p>{$this->lang['strnodata']}</p>".PHP_EOL;
+            echo "<p>{$this->lang['strnodata']}</p>" . \PHP_EOL;
         }
 
         $this->printNavLinks(['alter' => [
-            'attr'    => [
+            'attr' => [
                 'href' => [
-                    'url'     => $this->view_name,
+                    'url' => $this->view_name,
                     'urlvars' => [
-                        'action'       => 'edit',
-                        'server'       => $_REQUEST['server'],
-                        'database'     => $_REQUEST['database'],
-                        'schema'       => $_REQUEST['schema'],
+                        'action' => 'edit',
+                        'server' => $_REQUEST['server'],
+                        'database' => $_REQUEST['database'],
+                        'schema' => $_REQUEST['schema'],
                         $this->subject => $_REQUEST[$this->subject],
                     ],
                 ],
             ],
             'content' => $this->lang['stralter'],
-        ]], "{$this->view_name}-definition", get_defined_vars());
+        ]], "{$this->view_name}-definition", \get_defined_vars());
     }
 }

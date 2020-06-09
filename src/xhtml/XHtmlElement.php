@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\XHtml;
@@ -15,7 +15,9 @@ namespace PHPPgAdmin\XHtml;
 class XHtmlElement extends XHtmlSimpleElement
 {
     public $_text;
+
     public $_htmlcode = '';
+
     public $_siblings = [];
 
     public function __construct($text = null)
@@ -27,25 +29,25 @@ class XHtmlElement extends XHtmlSimpleElement
         }
     }
 
-    /*
-     * Adds an xhtml child to element
+    /**
+     * Adds an xhtml child to element.
      *
-     * @param XHtmlElement $object    The element to become a child of element
+     * @param XHtmlOption $object
      */
-    public function add(&$object)
+    public function add(XHtmlOption &$object): void
     {
-        array_push($this->_siblings, $object);
+        \array_push($this->_siblings, $object);
     }
 
-    /*
-     * The CDATA section of Element
+    /**
+     * The CDATA section of Element.
      *
-     * @param    string   $text Text content of the element
+     * @param string $text Text content of the element
      */
-    public function set_text($text)
+    public function set_text($text): void
     {
         if ($text) {
-            $this->_text = htmlspecialchars($text);
+            $this->_text = \htmlspecialchars($text);
         }
     }
 
@@ -57,9 +59,10 @@ class XHtmlElement extends XHtmlSimpleElement
     public function _html()
     {
         $this->_htmlcode = "<{$this->_element}";
+
         foreach ($this->_attributes as $attribute => $value) {
             if (!empty($value)) {
-                $this->_htmlcode .= sprintf(' %s="%s" ', $attribute, $value);
+                $this->_htmlcode .= \sprintf(' %s="%s" ', $attribute, $value);
             }
         }
         $this->_htmlcode .= '>';
@@ -85,6 +88,6 @@ class XHtmlElement extends XHtmlSimpleElement
 
     public function has_siblings()
     {
-        return 0 != count($this->_siblings);
+        return 0 !== \count($this->_siblings);
     }
 }

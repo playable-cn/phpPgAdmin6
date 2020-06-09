@@ -1,15 +1,13 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
-$do_render = false;
-if (!defined('BASE_PATH')) {
-    require_once '../../src/lib.inc.php';
-    $do_render = true;
-}
-$controller = new \PHPPgAdmin\Controller\DataimportController($container);
-if ($do_render) {
-    $controller->render();
+/**
+ * @param Psr\Container\ContainerInterface $container
+ */
+function dataimportFactory($container)
+{
+    return new \PHPPgAdmin\Controller\DataimportController($container);
 }

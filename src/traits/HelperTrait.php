@@ -1,10 +1,12 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Traits;
+
+\defined('BASE_PATH') || \define('BASE_PATH', \dirname(__DIR__, 2));
 
 /**
  * @file
@@ -17,13 +19,36 @@ namespace PHPPgAdmin\Traits;
 trait HelperTrait
 {
     /**
+     * static reference to subfolder in which the app is running.
+     *
+     * @var null|string
+     */
+    public static $subFolder = null;
+
+    /**
+     * Gets the subfolder.
+     *
+     * @param string $path The path
+     *
+     * @return string the subfolder
+     */
+    public function getSubfolder(string $path = ''): string
+    {
+        if (null === self::$subFolder) {
+            self::$subFolder = $this->container->subfolder;
+        }
+
+        return \implode(\DIRECTORY_SEPARATOR, [self::$subFolder, $path]);
+    }
+
+    /**
      * Halts the execution of the program. It's like calling exit() but using builtin Slim Exceptions.
      *
      * @param string $msg The message to show to the user
      *
      * @throws \Slim\Exception\SlimException (description)
      */
-    public function halt($msg = 'An error has happened')
+    public function halt($msg = 'An error has happened'): void
     {
         $body = $this->container->responseobj->getBody();
         $body->write($msg);
@@ -31,52 +56,34 @@ trait HelperTrait
         throw new \Slim\Exception\SlimException($this->container->requestobj, $this->container->responseobj);
     }
 
-    /**
-     * Adds a flash message to the session that will be displayed on the next request.
-     *
-     * @param mixed  $content msg content (can be object, array, etc)
-     * @param string $key     The key to associate with the message. Defaults to the stack
-     *                        trace of the closure or method that called addFlassh
-     */
-    public function addFlash($content, $key = '')
-    {
-        if ($key === '') {
-            $key = self::getBackTrace();
-        }
-        // $this->dump(__METHOD__ . ': addMessage ' . $key . '  ' . json_encode($content));
-        $this->container->flash->addMessage($key, $content);
-    }
-
     public static function getBackTrace($offset = 0)
     {
-        $i0        = $offset;
-        $i1        = $offset + 1;
-        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 3);
+        $i0 = $offset;
+        $i1 = $offset + 1;
+        $backtrace = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, $offset + 3);
 
-        $btarray0 = ([
-            'class'    => $backtrace[$i1]['class'] === 'Closure' ?
+        return [
+            'class' => 'Closure' === $backtrace[$i1]['class'] ?
             $backtrace[$i0]['file'] :
             $backtrace[$i1]['class'],
 
-            'type'     => $backtrace[$i1]['type'],
+            'type' => $backtrace[$i1]['type'],
 
-            'function' => $backtrace[$i1]['function'] === '{closure}'
+            'function' => '{closure}' === $backtrace[$i1]['function']
             ? $backtrace[$i0]['function'] :
             $backtrace[$i1]['function'],
 
-            'spacer4'  => ' ',
-            'line'     => $backtrace[$i0]['line'],
-        ]);
-
-        return $btarray0;
+            'spacer4' => ' ',
+            'line' => $backtrace[$i0]['line'],
+        ];
         //dump($backtrace);
     }
 
     /**
      * Converts an ADORecordSet to an array.
      *
-     * @param \PHPPgAdmin\ADORecordSet $set   The set
-     * @param string                   $field optionally the field to query for
+     * @param \ADORecordSet $set   The set
+     * @param string        $field optionally the field to query for
      *
      * @return array the parsed array
      */
@@ -84,9 +91,10 @@ trait HelperTrait
     {
         $result = [];
 
-        if ($set->recordCount() <= 0) {
+        if (0 >= $set->recordCount()) {
             return $result;
         }
+
         while (!$set->EOF) {
             $result[] = $field ? $set->fields[$field] : $set;
             $set->moveNext();
@@ -114,7 +122,8 @@ trait HelperTrait
 
             return $var1;
         }
-        if ($set === true) {
+
+        if (true === $set) {
             $var1 = $default;
 
             return $var1;
@@ -137,7 +146,7 @@ trait HelperTrait
      */
     public function coalesceArr(&$array, $key, $default = null, $set = true)
     {
-        if (!isset($array[$key]) && $set === true) {
+        if (!isset($array[$key]) && true === $set) {
             $array[$key] = $default;
         }
 
@@ -146,18 +155,18 @@ trait HelperTrait
 
     public static function formatSizeUnits($bytes, $lang)
     {
-        if ($bytes == -1) {
+        if (-1 === $bytes) {
             $bytes = $lang['strnoaccess'];
-        } elseif ($bytes >= 1099511627776) {
-            $bytes = sprintf('%s %s', number_format($bytes / 1099511627776, 0), $lang['strtb']);
-        } elseif ($bytes >= 1073741824) {
-            $bytes = sprintf('%s %s', number_format($bytes / 1073741824, 0), $lang['strgb']);
-        } elseif ($bytes >= 1048576) {
-            $bytes = sprintf('%s %s', number_format($bytes / 1048576, 0), $lang['strmb']);
-        } elseif ($bytes >= 1024) {
-            $bytes = sprintf('%s %s', number_format($bytes / 1024, 0), $lang['strkb']);
+        } elseif (1099511627776 <= $bytes) {
+            $bytes = \sprintf('%s %s', \number_format($bytes / 1099511627776, 0), $lang['strtb']);
+        } elseif (1073741824 <= $bytes) {
+            $bytes = \sprintf('%s %s', \number_format($bytes / 1073741824, 0), $lang['strgb']);
+        } elseif (1048576 <= $bytes) {
+            $bytes = \sprintf('%s %s', \number_format($bytes / 1048576, 0), $lang['strmb']);
+        } elseif (1024 <= $bytes) {
+            $bytes = \sprintf('%s %s', \number_format($bytes / 1024, 0), $lang['strkb']);
         } else {
-            $bytes = sprintf('%s %s', $bytes, $lang['strbytes']);
+            $bytes = \sprintf('%s %s', $bytes, $lang['strbytes']);
         }
 
         return $bytes;
@@ -172,55 +181,58 @@ trait HelperTrait
      */
     public static function br2ln($msg)
     {
-        return str_replace(['<br>', '<br/>', '<br />'], PHP_EOL, $msg);
+        return \str_replace(['<br>', '<br/>', '<br />'], \PHP_EOL, $msg);
     }
 
     /**
      * Receives N parameters and sends them to the console adding where was it called from.
+     *
+     * @param array<int, mixed> $args
      */
-    public function prtrace(...$args)
+    public function prtrace(...$args): void
     {
-        return self::staticTrace($args);
+        if (\function_exists('\dump')) {
+            \dump($args);
+        }
     }
 
-    public function dump(...$args)
+    /**
+     * Just an alias of prtrace.
+     *
+     * @param array<int, mixed> $args The arguments
+     */
+    public function dump(...$args): void
     {
-        return self::staticTrace($args);
+        if (\function_exists('\dump')) {
+            \dump($args);
+        }
+    }
+
+    /**
+     * Just an alias of prtrace.
+     *
+     * @param array<int, mixed> $args The arguments
+     */
+    public function dumpAndDie(...$args): void
+    {
+        if (\function_exists('\dump')) {
+            \dump($args);
+        }
+
+        exit();
     }
 
     /**
      * Receives N parameters and sends them to the console adding where was it
      * called from.
      *
-     * @param mixed $variablesToDump
-     * @param mixed $exitAfterwards
+     * @param array<int, mixed> $args
      */
-    private static function staticTrace(
-        $variablesToDump = [],
-        string $whoCalledMe = '',
-        $exitAfterwards = false
-    ) {
-        if (!$variablesToDump) {
-            $variablesToDump = func_get_args();
+    public static function staticTrace(
+        ...$args
+    ): void {
+        if (\function_exists('\dump')) {
+            \dump($args);
         }
-        if ($whoCalledMe === '') {
-            $whoCalledMe = str_replace(BASE_PATH, '', implode('', self::getBackTrace(2)));
-        }
-        if ($exitAfterwards && function_exists('dd')) {
-            dd([
-                'args' => $variablesToDump,
-                'from' => $whoCalledMe,
-            ]);
-        } elseif (function_exists('dump')) {
-            dump([
-                'args' => $variablesToDump,
-                'from' => $whoCalledMe,
-            ]);
-        }
-    }
-
-    public function dumpAndDie(...$args)
-    {
-        return self::staticTrace($args);
     }
 }

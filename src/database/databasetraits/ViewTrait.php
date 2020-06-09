@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Database\Traits;
@@ -14,7 +14,7 @@ trait ViewTrait
     /**
      * Returns a list of all views in the database.
      *
-     * @return \PHPPgAdmin\ADORecordSet All views
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getViews()
     {
@@ -34,7 +34,7 @@ trait ViewTrait
     /**
      * Returns a list of all materialized views in the database.
      *
-     * @return \PHPPgAdmin\ADORecordSet All materialized views
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getMaterializedViews()
     {
@@ -80,7 +80,8 @@ trait ViewTrait
     public function createView($viewname, $definition, $replace, $comment, $materialized = false)
     {
         $status = $this->beginTransaction();
-        if ($status != 0) {
+
+        if (0 !== $status) {
             return -1;
         }
 
@@ -96,17 +97,19 @@ trait ViewTrait
 
         $obj_type = $materialized ? ' MATERIALIZED VIEW ' : ' VIEW ';
 
-        $sql .= $obj_type." \"{$f_schema}\".\"{$viewname}\" AS {$definition}";
+        $sql .= $obj_type . " \"{$f_schema}\".\"{$viewname}\" AS {$definition}";
 
         $status = $this->execute($sql);
+
         if ($status) {
             $this->rollbackTransaction();
 
             return -1;
         }
 
-        if ($comment != '') {
+        if ('' !== $comment) {
             $status = $this->setComment($obj_type, $viewname, '', $comment);
+
             if ($status) {
                 $this->rollbackTransaction();
 
@@ -132,12 +135,13 @@ trait ViewTrait
     {
         $data = $this->getView($view);
 
-        if ($data->recordCount() != 1) {
+        if (1 !== $data->recordCount()) {
             return -2;
         }
 
         $status = $this->beginTransaction();
-        if ($status != 0) {
+
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return -1;
@@ -145,7 +149,7 @@ trait ViewTrait
 
         $status = $this->_alterView($data, $name, $owner, $schema, $comment);
 
-        if ($status != 0) {
+        if (0 !== $status) {
             $this->rollbackTransaction();
 
             return $status;
@@ -159,7 +163,7 @@ trait ViewTrait
      *
      * @param string $view The name of the view or materialized to retrieve
      *
-     * @return \PHPPgAdmin\ADORecordSet [Materialized] View info
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getView($view)
     {
@@ -180,73 +184,26 @@ trait ViewTrait
     }
 
     /**
-     * Protected method which alter a view
-     * SHOULDN'T BE CALLED OUTSIDE OF A TRANSACTION.
-     *
-     * @param \PHPPgAdmin\ADORecordSet $vwrs    The view recordSet returned by getView()
-     * @param string                   $name    The new name for the view
-     * @param string                   $owner   The new owner for the view
-     * @param string                   $schema  Schema name
-     * @param string                   $comment The comment on the view
-     *
-     * @return int 0 success
-     */
-    protected function _alterView($vwrs, $name, $owner, $schema, $comment)
-    {
-        $this->fieldArrayClean($vwrs->fields);
-
-        $type = ($vwrs->fields['relkind'] === 'm') ? 'MATERIALIZED VIEW' : 'VIEW';
-        // Comment
-
-        if ($this->setComment($type, $vwrs->fields['relname'], '', $comment) != 0) {
-            return -4;
-        }
-
-        // Owner
-        $this->fieldClean($owner);
-        $status = $this->alterViewOwner($vwrs, $owner);
-        if ($status != 0) {
-            return -5;
-        }
-
-        // Rename
-        $this->fieldClean($name);
-        $status = $this->alterViewName($vwrs, $name);
-        if ($status != 0) {
-            return -3;
-        }
-
-        // Schema
-        $this->fieldClean($schema);
-        $status = $this->alterViewSchema($vwrs, $schema);
-        if ($status != 0) {
-            return -6;
-        }
-
-        return 0;
-    }
-
-    /**
      * Alter a view's owner.
      *
      * @param \PHPPgAdmin\ADORecordSet $vwrs  The view recordSet returned by getView()
      * @param null|string              $owner
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      *
      * @internal param  $name new view's owner
      */
     public function alterViewOwner($vwrs, $owner = null)
     {
-        $type = ($vwrs->fields['relkind'] === 'm') ? 'MATERIALIZED VIEW' : 'VIEW';
+        $type = ('m' === $vwrs->fields['relkind']) ? 'MATERIALIZED VIEW' : 'VIEW';
         /* $vwrs and $owner are cleaned in _alterView */
-        if ((!empty($owner)) && ($vwrs->fields['relowner'] != $owner)) {
+        if ((!empty($owner)) && ($vwrs->fields['relowner'] !== $owner)) {
             $f_schema = $this->_schema;
             $this->fieldClean($f_schema);
             // If owner has been changed, then do the alteration.  We are
             // careful to avoid this generally as changing owner is a
             // superuser only function.
-            $sql = "ALTER ${type} \"{$f_schema}\".\"{$vwrs->fields['relname']}\" OWNER TO \"{$owner}\"";
+            $sql = "ALTER {$type} \"{$f_schema}\".\"{$vwrs->fields['relname']}\" OWNER TO \"{$owner}\"";
 
             return $this->execute($sql);
         }
@@ -260,19 +217,20 @@ trait ViewTrait
      * @param \PHPPgAdmin\ADORecordSet $vwrs The view recordSet returned by getView()
      * @param string                   $name The new view's name
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function alterViewName($vwrs, $name)
     {
-        $type = ($vwrs->fields['relkind'] === 'm') ? 'MATERIALIZED VIEW' : 'VIEW';
+        $type = ('m' === $vwrs->fields['relkind']) ? 'MATERIALIZED VIEW' : 'VIEW';
         // Rename (only if name has changed)
         /* $vwrs and $name are cleaned in _alterView */
-        if (!empty($name) && ($name != $vwrs->fields['relname'])) {
+        if (!empty($name) && ($name !== $vwrs->fields['relname'])) {
             $f_schema = $this->_schema;
             $this->fieldClean($f_schema);
-            $sql    = "ALTER ${type} \"{$f_schema}\".\"{$vwrs->fields['relname']}\" RENAME TO \"{$name}\"";
+            $sql = "ALTER {$type} \"{$f_schema}\".\"{$vwrs->fields['relname']}\" RENAME TO \"{$name}\"";
             $status = $this->execute($sql);
-            if ($status == 0) {
+
+            if (0 === $status) {
                 $vwrs->fields['relname'] = $name;
             } else {
                 return $status;
@@ -288,21 +246,21 @@ trait ViewTrait
      * @param \PHPPgAdmin\ADORecordSet $vwrs   The view recordSet returned by getView()
      * @param string                   $schema
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      *
      * @internal param The $name new view's schema
      */
     public function alterViewSchema($vwrs, $schema)
     {
-        $type = ($vwrs->fields['relkind'] === 'm') ? 'MATERIALIZED VIEW' : 'VIEW';
+        $type = ('m' === $vwrs->fields['relkind']) ? 'MATERIALIZED VIEW' : 'VIEW';
 
         /* $vwrs and $schema are cleaned in _alterView */
-        if (!empty($schema) && ($vwrs->fields['nspname'] != $schema)) {
+        if (!empty($schema) && ($vwrs->fields['nspname'] !== $schema)) {
             $f_schema = $this->_schema;
             $this->fieldClean($f_schema);
             // If tablespace has been changed, then do the alteration.  We
             // don't want to do this unnecessarily.
-            $sql = "ALTER ${type} \"{$f_schema}\".\"{$vwrs->fields['relname']}\" SET SCHEMA \"{$schema}\"";
+            $sql = "ALTER {$type} \"{$f_schema}\".\"{$vwrs->fields['relname']}\" SET SCHEMA \"{$schema}\"";
 
             return $this->execute($sql);
         }
@@ -316,18 +274,19 @@ trait ViewTrait
      * @param string $viewname The name of the view to drop
      * @param string $cascade  True to cascade drop, false to restrict
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function dropView($viewname, $cascade)
     {
         $vwrs = $this->getView($viewname);
-        $type = ($vwrs->fields['relkind'] === 'm') ? 'MATERIALIZED VIEW' : 'VIEW';
+        $type = ('m' === $vwrs->fields['relkind']) ? 'MATERIALIZED VIEW' : 'VIEW';
 
         $f_schema = $this->_schema;
         $this->fieldClean($f_schema);
         $this->fieldClean($viewname);
 
-        $sql = "DROP ${type} \"{$f_schema}\".\"{$viewname}\"";
+        $sql = "DROP {$type} \"{$f_schema}\".\"{$viewname}\"";
+
         if ($cascade) {
             $sql .= ' CASCADE';
         }
@@ -352,4 +311,54 @@ trait ViewTrait
     abstract public function clean(&$str);
 
     abstract public function fieldArrayClean(&$arr);
+
+    /**
+     * Protected method which alter a view
+     * SHOULDN'T BE CALLED OUTSIDE OF A TRANSACTION.
+     *
+     * @param \PHPPgAdmin\ADORecordSet $vwrs    The view recordSet returned by getView()
+     * @param string                   $name    The new name for the view
+     * @param string                   $owner   The new owner for the view
+     * @param string                   $schema  Schema name
+     * @param string                   $comment The comment on the view
+     *
+     * @return int 0 success
+     */
+    protected function _alterView($vwrs, $name, $owner, $schema, $comment)
+    {
+        $this->fieldArrayClean($vwrs->fields);
+
+        $type = ('m' === $vwrs->fields['relkind']) ? 'MATERIALIZED VIEW' : 'VIEW';
+        // Comment
+
+        if (0 !== $this->setComment($type, $vwrs->fields['relname'], '', $comment)) {
+            return -4;
+        }
+
+        // Owner
+        $this->fieldClean($owner);
+        $status = $this->alterViewOwner($vwrs, $owner);
+
+        if (0 !== $status) {
+            return -5;
+        }
+
+        // Rename
+        $this->fieldClean($name);
+        $status = $this->alterViewName($vwrs, $name);
+
+        if (0 !== $status) {
+            return -3;
+        }
+
+        // Schema
+        $this->fieldClean($schema);
+        $status = $this->alterViewSchema($vwrs, $schema);
+
+        if (0 !== $status) {
+            return -6;
+        }
+
+        return 0;
+    }
 }

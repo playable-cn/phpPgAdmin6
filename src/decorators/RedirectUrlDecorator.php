@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Decorators;
@@ -10,43 +10,45 @@ class RedirectUrlDecorator extends Decorator
 {
     public function __construct($base, $queryVars = null)
     {
-        $this->b = $base;
+        $this->base = $base;
+
         if (null !== $queryVars) {
-            $this->q = $queryVars;
+            $this->queryVars = $queryVars;
         }
     }
 
     public function value($fields)
     {
-        $url = Decorator::get_sanitized_value($this->b, $fields);
+        $url = Decorator::get_sanitized_value($this->base, $fields);
 
         if (false === $url) {
             return '';
         }
 
-        //$this->prtrace('url', $url);
-
-        if (!empty($this->q)) {
-            $queryVars = Decorator::get_sanitized_value($this->q, $fields);
+        if (!empty($this->queryVars)) {
+            $queryVars = Decorator::get_sanitized_value($this->queryVars, $fields);
 
             $sep = '?';
-            ksort($queryVars);
+            \ksort($queryVars);
+
             foreach ($queryVars as $var => $value) {
-                $varname  = Decorator::value_url($var, $fields);
+                $varname = Decorator::value_url($var, $fields);
                 $varvalue = Decorator::value_url($value, $fields);
-                if ('subject' == $varname) {
-                    $url = '/'.str_replace('redirect?', 'redirect/'.$varvalue.'?', $url);
+
+                if ('subject' === $varname) {
+                    $url = '/' . \str_replace('redirect?', 'redirect/' . $varvalue . '?', $url);
                 } else {
-                    $url .= $sep.$varname.'='.$varvalue;
+                    $url .= $sep . $varname . '=' . $varvalue;
                 }
 
                 $sep = '&';
             }
         }
-        if (\SUBFOLDER !== '' && (0 === strpos($url, '/')) && (false === strpos($url, \SUBFOLDER))) {
-            $url = str_replace('//', '/', \SUBFOLDER.'/'.$url);
+
+        if (self::SUBFOLDER !== '' && (0 === \mb_strpos($url, '/')) && (false === \mb_strpos($url, self::SUBFOLDER))) {
+            $url = \str_replace('//', '/', self::SUBFOLDER . '/' . $url);
         }
 
-        return str_replace('.php', '', $url);
+        return \str_replace('.php', '', $url);
     }
 }

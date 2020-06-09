@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Database;
@@ -12,7 +12,8 @@ namespace PHPPgAdmin\Database;
  */
 class Postgres96 extends Postgres
 {
-    public $typIndexes    = ['BTREE', 'BRIN', 'RTREE', 'GIST', 'GIN', 'HASH', 'SP-GIST'];
+    public $typIndexes = ['BTREE', 'BRIN', 'RTREE', 'GIST', 'GIN', 'HASH', 'SP-GIST'];
+
     public $major_version = 9.6;
 
     // Administration functions
@@ -22,11 +23,11 @@ class Postgres96 extends Postgres
      *
      * @param null|string $database (optional) Find only connections to specified database
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet A recordset
      */
     public function getProcesses($database = null)
     {
-        if ($database === null) {
+        if (null === $database) {
             $sql = "SELECT datid, datname, pid, usename, application_name, client_addr, state, wait_event_type, wait_event, state_change as query_start,
 					CASE
                         WHEN state='active' THEN query
@@ -66,7 +67,7 @@ class Postgres96 extends Postgres
      * @param string $expiry     string Format 'YYYY-MM-DD HH:MM:SS'.  '' means never expire
      * @param array  $groups     The groups to create the user in
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet 0 if operation was successful
      *
      * @internal param $group (array) The groups to create the user in
      */
@@ -79,17 +80,19 @@ class Postgres96 extends Postgres
         $this->fieldArrayClean($groups);
 
         $sql = "CREATE USER \"{$username}\"";
-        if ($password != '') {
+
+        if ('' !== $password) {
             $sql .= " WITH ENCRYPTED PASSWORD '{$enc}'";
         }
 
         $sql .= $createdb ? ' CREATEDB' : ' NOCREATEDB';
         $sql .= $createrole ? ' CREATEROLE' : ' NOCREATEROLE';
-        if (is_array($groups) && sizeof($groups) > 0) {
-            $sql .= ' IN GROUP "'.join('", "', $groups).'"';
+
+        if (\is_array($groups) && 0 < \count($groups)) {
+            $sql .= ' IN GROUP "' . \implode('", "', $groups) . '"';
         }
 
-        if ($expiry != '') {
+        if ('' !== $expiry) {
             $sql .= " VALID UNTIL '{$expiry}'";
         } else {
             $sql .= " VALID UNTIL 'infinity'";

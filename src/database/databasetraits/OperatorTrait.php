@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Database\Traits;
@@ -14,7 +14,7 @@ trait OperatorTrait
     /**
      * Returns a list of all operators in the database.
      *
-     * @return \PHPPgAdmin\ADORecordSet All operators
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getOperators()
     {
@@ -45,26 +45,26 @@ trait OperatorTrait
      * @param mixed $operator_oid The OID of the operator to drop
      * @param bool  $cascade      True to cascade drop, false to restrict
      *
-     * @return int 0 if operation was successful
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function dropOperator($operator_oid, $cascade)
     {
         // Function comes in with $object as operator OID
-        $opr      = $this->getOperator($operator_oid);
+        $opr = $this->getOperator($operator_oid);
         $f_schema = $this->_schema;
         $this->fieldClean($f_schema);
         $this->fieldClean($opr->fields['oprname']);
 
         $sql = "DROP OPERATOR \"{$f_schema}\".{$opr->fields['oprname']} (";
         // Quoting or formatting here???
-        if ($opr->fields['oprleftname'] !== null) {
-            $sql .= $opr->fields['oprleftname'].', ';
+        if (null !== $opr->fields['oprleftname']) {
+            $sql .= $opr->fields['oprleftname'] . ', ';
         } else {
             $sql .= 'NONE, ';
         }
 
-        if ($opr->fields['oprrightname'] !== null) {
-            $sql .= $opr->fields['oprrightname'].')';
+        if (null !== $opr->fields['oprrightname']) {
+            $sql .= $opr->fields['oprrightname'] . ')';
         } else {
             $sql .= 'NONE)';
         }
@@ -81,7 +81,7 @@ trait OperatorTrait
      *
      * @param mixed $operator_oid The oid of the operator
      *
-     * @return \PHPPgAdmin\ADORecordSet Function info
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getOperator($operator_oid)
     {
@@ -110,9 +110,9 @@ trait OperatorTrait
     }
 
     /**
-     *  Gets all opclasses.
+     * Gets all opclasses.
      *
-     * @return \PHPPgAdmin\ADORecordSet A recordset
+     * @return int|\PHPPgAdmin\ADORecordSet
      */
     public function getOpClasses()
     {

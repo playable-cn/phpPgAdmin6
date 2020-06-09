@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin\Controller;
@@ -10,8 +10,6 @@ use PHPPgAdmin\Decorators\Decorator;
 
 /**
  * Base controller class.
- *
- * @package PHPPgAdmin
  */
 class CastsController extends BaseController
 {
@@ -22,7 +20,7 @@ class CastsController extends BaseController
      */
     public function render()
     {
-        if ('tree' == $this->action) {
+        if ('tree' === $this->action) {
             return $this->doTree();
         }
 
@@ -44,17 +42,18 @@ class CastsController extends BaseController
      *
      * @param mixed $msg
      */
-    public function doDefault($msg = '')
+    public function doDefault($msg = ''): void
     {
         $data = $this->misc->getDatabaseAccessor();
 
-        $lang              = $this->lang;
-        $renderCastContext = function ($val) use ($lang) {
+        $lang = $this->lang;
+        $renderCastContext = static function ($val) use ($lang) {
             switch ($val) {
                 case 'e':
                     return $lang['strno'];
                 case 'a':
                     return $lang['strinassignment'];
+
                 default:
                     return $lang['stryes'];
             }
@@ -75,18 +74,18 @@ class CastsController extends BaseController
                 'title' => $this->lang['strtargettype'],
                 'field' => Decorator::field('casttarget'),
             ],
-            'function'    => [
-                'title'  => $this->lang['strfunction'],
-                'field'  => Decorator::field('castfunc'),
+            'function' => [
+                'title' => $this->lang['strfunction'],
+                'field' => Decorator::field('castfunc'),
                 'params' => ['null' => $this->lang['strbinarycompat']],
             ],
-            'implicit'    => [
-                'title'  => $this->lang['strimplicit'],
-                'field'  => Decorator::field('castcontext'),
-                'type'   => 'callback',
+            'implicit' => [
+                'title' => $this->lang['strimplicit'],
+                'field' => Decorator::field('castcontext'),
+                'type' => 'callback',
                 'params' => ['function' => $renderCastContext, 'align' => 'center'],
             ],
-            'comment'     => [
+            'comment' => [
                 'title' => $this->lang['strcomment'],
                 'field' => Decorator::field('castcomment'),
             ],

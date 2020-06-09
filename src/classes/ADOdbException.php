@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPPgAdmin v6.0.0-RC4
+ * PHPPgAdmin 6.0.0
  */
 
 namespace PHPPgAdmin;
@@ -19,8 +19,6 @@ namespace PHPPgAdmin;
  * Latest version is available at http://php.weblogs.com
  * Exception-handling code using PHP5 exceptions (try-catch-throw).
  *
- * @package PHPPgAdmin
- *
  * @author John Lim
  * @copyright 2000-2013 John Lim <jlim@natsoft.com>
  * @copyright 2014      Damien Regad, Mark Newnham and the ADOdb community
@@ -30,10 +28,15 @@ namespace PHPPgAdmin;
 class ADOdbException extends \Exception
 {
     public $dbms;
+
     public $fn;
-    public $sql      = '';
-    public $params   = '';
-    public $host     = '';
+
+    public $sql = '';
+
+    public $params = '';
+
+    public $host = '';
+
     public $database = '';
 
     /**
@@ -53,32 +56,34 @@ class ADOdbException extends \Exception
     {
         switch ($fn) {
             case 'EXECUTE':
-                $this->sql    = is_array($p1) ? $p1[0] : $p1;
+                $this->sql = \is_array($p1) ? $p1[0] : $p1;
                 $this->params = $p2;
-                $s            = "${dbms} error: [${errno}: ${errmsg}] in ${fn}(\"{$this->sql}\")";
+                $s = "{$dbms} error: [{$errno}: {$errmsg}] in {$fn}(\"{$this->sql}\")";
 
                 break;
             case 'PCONNECT':
             case 'CONNECT':
                 $user = $thisConnection->user;
-                $s    = "${dbms} error: [${errno}: ${errmsg}] in ${fn}(${p1}, '${user}', '****', ${p2})";
+                $s = "{$dbms} error: [{$errno}: {$errmsg}] in {$fn}({$p1}, '{$user}', '****', {$p2})";
 
                 break;
+
             default:
-                $s = "${dbms} error: [${errno}: ${errmsg}] in ${fn}(${p1}, ${p2})";
+                $s = "{$dbms} error: [{$errno}: {$errmsg}] in {$fn}({$p1}, {$p2})";
 
                 break;
         }
 
         $this->dbms = $dbms;
+
         if ($thisConnection) {
-            $this->host     = $thisConnection->host;
+            $this->host = $thisConnection->host;
             $this->database = $thisConnection->database;
         }
-        $this->fn  = $fn;
+        $this->fn = $fn;
         $this->msg = $errmsg;
 
-        if (!is_numeric($errno)) {
+        if (!\is_numeric($errno)) {
             $errno = -1;
         }
 
@@ -100,30 +105,30 @@ class ADOdbException extends \Exception
      *
      * @internal param $P2 $fn specific parameter - see below
      */
-    public static function adodb_throw($dbms, $fn, $errno, $errmsg, $p1, $p2, $thisConnection)
+    public static function adodb_throw($dbms, $fn, $errno, $errmsg, $p1, $p2, $thisConnection): void
     {
-        if (error_reporting() == 0) {
+        if (0 === \error_reporting()) {
             return;
         }
 
-        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+        $backtrace = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 2);
 
         $btarray0 = [
-            'msg'      => 'ADOdbException at ',
-            'class'    => $backtrace[1]['class'],
-            'type'     => $backtrace[1]['type'],
+            'msg' => 'ADOdbException at ',
+            'class' => $backtrace[1]['class'],
+            'type' => $backtrace[1]['type'],
             'function' => $backtrace[1]['function'],
-            'spacer'   => ' ',
-            'line'     => $backtrace[0]['line'],
+            'spacer' => ' ',
+            'line' => $backtrace[0]['line'],
         ];
 
-        $errmsg = htmlentities(\PHPPgAdmin\Traits\HelperTrait::br2ln($errmsg), ENT_NOQUOTES);
-        $p1     = htmlentities(\PHPPgAdmin\Traits\HelperTrait::br2ln($p1), ENT_NOQUOTES);
-        $p2     = htmlentities(\PHPPgAdmin\Traits\HelperTrait::br2ln($p2), ENT_NOQUOTES);
+        $errmsg = \htmlentities(\PHPPgAdmin\Traits\HelperTrait::br2ln($errmsg), \ENT_NOQUOTES);
+        $p1 = \htmlentities(\PHPPgAdmin\Traits\HelperTrait::br2ln($p1), \ENT_NOQUOTES);
+        $p2 = \htmlentities(\PHPPgAdmin\Traits\HelperTrait::br2ln($p2), \ENT_NOQUOTES);
 
         switch ($fn) {
             case 'EXECUTE':
-                $sql = str_replace(
+                $sql = \str_replace(
                     [
                         'SELECT',
                         'WHERE',
@@ -138,26 +143,27 @@ class ADOdbException extends \Exception
 
                 $inputparams = $p2;
 
-                $error_msg = '<p><b>strsqlerror</b><br />'.nl2br($errmsg).'</p> <p><b>SQL:</b><br />'.nl2br($sql).'</p> ';
+                $error_msg = '<p><b>strsqlerror</b><br />' . \nl2br($errmsg) . '</p> <p><b>SQL:</b><br />' . \nl2br($sql) . '</p> ';
 
-                echo '<table class="error" cellpadding="5"><tr><td>'.nl2br($error_msg).'</td></tr></table><br />'."\n";
+                echo '<table class="error" cellpadding="5"><tr><td>' . \nl2br($error_msg) . '</td></tr></table><br />' . "\n";
 
                 break;
             case 'PCONNECT':
             case 'CONNECT':
                 // do nothing;
                 break;
+
             default:
-                $s = "${dbms} error: [${errno}: ${errmsg}] in ${fn}(${p1}, ${p2})\n";
+                $s = "{$dbms} error: [{$errno}: {$errmsg}] in {$fn}({$p1}, {$p2})\n";
                 echo "<table class=\"error\" cellpadding=\"5\"><tr><td>{$s}</td></tr></table><br />\n";
 
                 break;
         }
 
-        $tag = implode('', $btarray0);
+        $tag = \implode('', $btarray0);
 
         //\PC::debug(['errno' => $errno, 'fn' => $fn, 'errmsg' => $errmsg], $tag);
 
-        throw new \PHPPgAdmin\ADOdbException($dbms, $fn, $errno, $errmsg, $p1, $p2, $thisConnection);
+        throw new self($dbms, $fn, $errno, $errmsg, $p1, $p2, $thisConnection);
     }
 }
